@@ -1,0 +1,72 @@
+<!--
+Copyright 2018 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Gamedev Canvas Workshop</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script>
+      function tryStartGame() {
+        var url = document.getElementById("url").value;
+        if(!url.startsWith("http")) {
+          url = "http://" + url;
+        }
+        url = encodeURIComponent(url);
+        document.location.href = "game.html?urlToPlay=" +
+                                  url +
+                                  "&playerName=" + document.getElementById("player").value;
+      }
+
+    </script>
+
+</head>
+<body>
+  <center>
+
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:80%;max-width:500px;">
+      <input class="mdl-textfield__input" type="text" id="player">
+      <label class="mdl-textfield__label" for="sample3">Player Name</label>
+    </div>
+
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:80%;max-width:500px;">
+      <input class="mdl-textfield__input" type="text" id="url">
+      <label class="mdl-textfield__label" for="sample3">URL to play</label>
+    </div>
+
+    <br/>
+
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:80%;max-width:500px;">
+    <select class="mdl-textfield__input" id="difficulty" name="difficulty">
+      <option></option>
+      <option value="Rookie">Rookie (Wifi)</option>
+      <option value="Advanced" selected>Advanced (3G)</option>
+      <option value="Hard">Hard (2G)</option>
+    </select>
+    <label class="mdl-textfield__label" for="difficulty">Difficulty</label>
+  </div>
+
+    <br/>
+
+    <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" onclick="tryStartGame();">
+      Button
+    </button>
+
+  </center>
+</body>
+</html>
