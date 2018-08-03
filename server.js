@@ -20,9 +20,11 @@ const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
 const adapter = new FileSync('.data/db.json')
 const db = low(adapter)
+const {URL} = require('url');
 
 const express = require('express');
 const puppeteer = require('puppeteer');
+const lighthouse = require('lighthouse');
 
 //for all of these we simulate a mobile phone - we'll take the 5x for now
 const devices = require('puppeteer/DeviceDescriptors');
@@ -159,8 +161,20 @@ app.get("/gamestate.json", async (request, response) => {
   console.log(firstPaint + " - " + fmp + " - " + domInteractive + " - " + loadEventStart);
   //fmp seems sometimes smaller than firstpaint - as a hack take loadevent then for now
   if(fmp < firstPaint) fmp = loadEventStart;
-  await browser.close();
 
+
+  //now run lighthouse
+  // Lighthouse will open URL. Puppeteer observes `targetchanged` and sets up network conditions.
+  // Possible race condition.
+  const {lhr} = await lighthouse(url, {
+    port: (new URL(browser.wsEndpoint())).port,
+    output: 'json',
+    logLevel: 'info',
+  });
+
+  console.log(`Lighthouse scores: ${Object.values(lhr.categories).map(c => c.score).join(', ')}`);
+
+  await browser.close();
   //now segment resource loading into levels based on performance metrics
   var resources1 = [];
   var resources2 = [];
