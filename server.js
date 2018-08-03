@@ -192,7 +192,8 @@ app.use(function(req, res, next) {
   next();
 });
 
-
-var listener = app.listen(8000, function () {
+// Start the server
+const PORT = process.env.PORT || 8080;
+var listener = app.listen(PORT, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
