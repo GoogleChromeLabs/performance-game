@@ -8,6 +8,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+#gcloud setup
+.gcloudignore
+
 # Runtime data
 pids
 *.pid
