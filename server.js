@@ -102,66 +102,6 @@ app.get("/gamestate.json", async (request, response) => {
   var url = request.query.url;
   console.log("Starting game for url: " + url);
   var startTime;
-	await page.emulate(phone);
-
-  var resources = [];
-
-  // capture and log all resources loaded
-  page.on('response', response => {
-    var url = response.url();
-    var length = response.headers()["content-length"];
-    if(!length) length = 1;
-    var type = response.headers()["content-type"];
-    if(!url || !type) return;
-    length = length/1000;   // let's work in kb, more intuitive
-    var name = url.split('/').pop().replace(/[^a-zA-Z._ ]{3,}/g, "*");  // get just filename, and replace everything unreadable with * (fingerprints, hashes etc.)
-    if(name.includes('?')) name = name.substring(0, name.indexOf('?'));  // also strip off url params
-    if(!name) name = "index.html";  //empty path means index.html
-    //only do this for common mime types
-    if(type.includes("text/html") || type.includes("text/css") || type.includes("javascript") || type.includes("image/") || type.includes("font/") || !startTime) {
-      if(!startTime) startTime = Date.now();
-      resources.push({"time": Date.now() - startTime, "label": name, "size": length, "url": url, "coverage": 100});
-    }
-  })
-
-  // collect coverage metrics
-  await Promise.all([
-    page.coverage.startJSCoverage(),
-    page.coverage.startCSSCoverage()
-  ]);
-
-  // now load the page. This will trigger the response logging, adn coverage monitoring
-  await page.goto(url);
-  // we'll need to wait a sec, otherwise FMP isn't calculated yet
-  await page.waitFor(1000);
-
-  // stop coverage monitoring, collect coverage stats
-  var coverage = {};
-  const [jsCoverage, cssCoverage] = await Promise.all([
-    page.coverage.stopJSCoverage(),
-    page.coverage.stopCSSCoverage(),
-  ]);
-  // calculate the coverage for every resource
-  let totalBytes = 0;
-  let usedBytes = 0;
-  for (const entry of [...jsCoverage, ...cssCoverage]) {
-    totalBytes += entry.text.length;
-    for (const range of entry.ranges) {
-      usedBytes += range.end - range.start - 1;
-    }
-    coverage[entry.url] = usedBytes / totalBytes * 100; // coverage in percent
-  }
-
-
-  // collecte performance metrics
-  var fmp = (await page._client.send('Performance.getMetrics')).metrics.find(x => x.name === "FirstMeaningfulPaint").value/1000;
-  const firstPaint = await page.evaluate("window.performance.getEntriesByName('first-paint')[0].startTime;");
-  const domInteractive = await page.evaluate("window.performance.timing.domInteractive - window.performance.timing.navigationStart");
-  const loadEventStart = await page.evaluate("window.performance.timing.loadEventStart - window.performance.timing.navigationStart");
-  console.log(firstPaint + " - " + fmp + " - " + domInteractive + " - " + loadEventStart);
-  //fmp seems sometimes smaller than firstpaint - as a hack take loadevent then for now
-  if(fmp < firstPaint) fmp = loadEventStart;
-
 
   //now run lighthouse
   // Lighthouse will open URL. Puppeteer observes `targetchanged` and sets up network conditions.
@@ -169,27 +109,74 @@ app.get("/gamestate.json", async (request, response) => {
   const {lhr} = await lighthouse(url, {
     port: (new URL(browser.wsEndpoint())).port,
     output: 'json',
-    logLevel: 'info',
+    logLevel: 'error',
   });
 
-  console.log(`Lighthouse scores: ${Object.values(lhr.categories).map(c => c.score).join(', ')}`);
+  // for testing and debugging we can write out the result json, you Can
+  //inspect it via the lighthouse viewer here: https://googlechrome.github.io/lighthouse/viewer/
+  //fs.writeFile('myjsonfile.json', JSON.stringify(lhr), 'utf8', function(){});
+
+  // get the audit results from lighthouse
+  var lhr_fcp = lhr.audits["first-contentful-paint"].rawValue;
+  var lhr_psi = lhr.audits["speed-index"].rawValue;
+  var lhr_interactive = lhr.audits["interactive"].rawValue;
+  var lhr_screenshots = lhr.audits["screenshot-thumbnails"].details.items[0].data;
+  var lhr_network = lhr.audits["network-requests"].details.items;
+  var lhr_unused_css = lhr.audits["unused-css-rules"].details.items;
+  var lhr_optimized_images = lhr.audits["uses-optimized-images"].details.items;
+  var lhr_uses_webp = lhr.audits["uses-webp-images"].details.items;
+  //var lhr_unused_js = lhr.audits["unused-js-rules"].details.items;
+
+  // merge several of the byteefficiency audits in a general 'wasted' hashmap
+  var wasted = {};
+  for(var i = 0; i < lhr_unused_css.length; i++) {
+    var item = lhr_unused_css[i];
+    if(!wasted[item.url]) wasted[item.url] = {};
+    wasted[item.url].coverage = 100 - item.wastedPercent;
+    wasted[item.url].type = "unused-css";
+  }
+  for(var i = 0; i < lhr_optimized_images.length; i++) {
+    var item = lhr_optimized_images[i];
+    if(!wasted[item.url]) wasted[item.url] = {};
+    wasted[item.url].coverage = 100 - item.wastedBytes*100/item.totalBytes;
+    wasted[item.url].type = "optimized-images";
+  }
+  for(var i = 0; i < lhr_uses_webp.length; i++) {
+    var item = lhr_uses_webp[i];
+    if(!wasted[item.url]) wasted[item.url] = {};
+    newCoverage = 100 - item.wastedBytes*100/item.totalBytes;
+    oldCoverage = wasted[item.url].coverage;
+    if(newCoverage>oldCoverage) continue;
+    wasted[item.url].coverage = newCoverage;
+    wasted[item.url].type = "optimized-images";
+  }
+  console.log("Lighthouse  finished, fcp: " + lhr_fcp + " - PSI: " + lhr_psi + " - TTI: " + lhr_interactive);
 
   await browser.close();
+  
   //now segment resource loading into levels based on performance metrics
   var resources1 = [];
   var resources2 = [];
   var resources3 = [];
-  for(var i = 0; i < resources.length; i++) {
-    var res = resources[i];
-    if(coverage[res.url]) res.coverage = coverage[res.url];
-    if(res.time < firstPaint) resources1.push(res);
-    else if(res.time < fmp) resources2.push(res);
-    else resources3.push(res);
+  var resources4 = [];
+  for(var i = 0; i < lhr_network.length; i++) {
+    var res = lhr_network[i];
+    var name = res.url.split('/').pop().replace(/[^a-zA-Z._ ]{3,}/g, "*");  // get just filename, and replace everything unreadable with * (fingerprints, hashes etc.)
+    if(name.includes('?')) name = name.substring(0, name.indexOf('?'));  // also strip off url params
+    if(!name) name = "index.html";  //empty path means index.html
+    res.label = name;
+    res.coverage = 100;
+    if (wasted[res.url]) res.coverage = wasted[res.url].coverage;
+    if(res.startTime < lhr_fcp) resources1.push(res);
+    else if(res.startTime < lhr_psi) resources2.push(res);
+    else if(res.startTime < lhr_interactive) resources3.push(res);
+    else resources4.push(res);
   }
-  var level1 = {"name": "Level 1\nFirst Paint\nHit ENTER to start", "resources": resources1};
-  var level2 = {"name": "Level 2\nMeaningful Paint\nHit ENTER to start", "resources": resources2};
-  var level3 = {"name": "Level 3\nFull Load\nHit ENTER to start", "resources": resources3};
-  var gameplay = [level1, level2, level3];
+  var level1 = {"name": "Level 1\nFirst Contentful Paint\nHit ENTER to start", "resources": resources1};
+  var level2 = {"name": "Level 2\nSpeed Index\nHit ENTER to start", "resources": resources2};
+  var level3 = {"name": "Level 3\nInteractive\nHit ENTER to start", "resources": resources3};
+  var level4 = {"name": "Level 4\nFull Load\nHit ENTER to start", "resources": resources4};
+  var gameplay = [level1, level2, level3, level4];
 
   //console.log(JSON.stringify(gameplay, null, 4));
   // send out gameplay

@@ -199,8 +199,13 @@ function update() {
 
   // next level reached?
   if (meteors.length === 0 && currentLevel.resources.length === 0 && gamestate.length > 0) {
-    currentLevel = gamestate.shift();
-    openPopup(currentLevel.name);
+    while(currentLevel.resources.length==0 && gamestate.length > 0) {
+      currentLevel = gamestate.shift();
+    }
+    if(currentLevel.resources.length==0) {
+      endGame(true);
+    }
+    else openPopup(currentLevel.name);
   // was the game won?
   } else if (gamestate.length === 0 && currentLevel.resources.length === 0 && meteors.length === 0 && ship.health > 0) {
     endGame(true);
@@ -287,10 +292,10 @@ function generateMeteorites() {
   if (!currentLevel || !currentLevel.resources) return;
   for (var i = currentLevel.resources.length - 1; i >= 0; i--) {
     var item = currentLevel.resources[i];
-    if (item.time * 20 < Date.now() - startTime) { // 20x time slowdown compared to real load
-      var size = item.size;
+    if (item.startTime * 20 < Date.now() - startTime) { // 20x time slowdown compared to real load
+      var size = item.transferSize/1000;
       size = Math.max(size, 35);
-      size = Math.min(size, 200);
+      size = Math.min(size, 300);
       var rnd = Math.random();
       var c = null;
       var asset_name = 'meteroid_neutral';
@@ -305,7 +310,7 @@ function generateMeteorites() {
       c.height = size;
       c.name = 'met' + i;
       c.label = item.label;
-      c.size = item.size;
+      c.size = item.transferSize/1000;
       c.health = item.size; // download size represents health
       // c.body.immovable = true;
       game.physics.enable(c, Phaser.Physics.ARCADE);
@@ -343,7 +348,7 @@ fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origi
   throw new Error('Network response was not ok.');
 }).then(function(myJSON) {
   console.log('Startin game with gamestate:');
-  console.log(myJSON);
+  console.log(JSON.parse(JSON.stringify(myJSON)));  // log a copy, as we'll change the original
   gamestate = myJSON;
   currentLevel = gamestate.shift();
   clearInterval(hintInterval);
