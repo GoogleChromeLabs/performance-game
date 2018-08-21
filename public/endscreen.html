@@ -14,15 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>Highscores</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 
-  <style>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<style>
+
+
+  .wrapper {
+    display: grid;
+    grid-template-columns: 100%;
+    grid-gap: 10px;
+    padding:30px;
+    height: 100vw;
+  }
+
+  .box {
+    background-color: lightblue;
+    color: #000;
+    border-radius: 5px;
+    padding: 20px;
+    font-size: 200%;
+    text-align: center;
+  }
 
   body {
     background-image: url('https://cdn.glitch.com/643b3408-c284-4b77-b341-3d1e4ac08674%2Fpwa-lighthouse.png?1526295781175');
@@ -30,71 +48,109 @@ limitations under the License.
     background-attachment: fixed;
     background-position: bottom;
     background-size: 100%;
+    background-color: black;
   }
 
-    #footer {
-      position: fixed;
-      bottom: 3px;
-      width: 100%;
-      text-align: center;
+  #footer {
+    position: fixed;
+    bottom: 3px;
+    width: 100%;
+    text-align: center;
+  }
+
+</style>
+
+  <script>
+
+    function getUrlParam(key) {
+      var match = window.location.href.match('[?&]' + key + '=([^&#]+)');
+      return match ? match[1] : null;
     }
-  </style>
+
+    var urlToPlay = getUrlParam("url");
+    var perf_score = parseInt(getUrlParam("lhr_perf_score")*100);
+    var score = getUrlParam("score");
+    var perf_score_shown = 0;
+    var score_shown = 0;
+
+    function init() {
+      if (navigator.share) {
+        document.getElementById("share_box").style.visibility = "visible";
+      }
+      else {
+        console.log("Weh Share unavailable, hiding sharing option!");
+      }
+      countUp();
+    }
+
+    function countUp() {
+      var change = false;
+      if (score_shown < score) {
+        score_shown+=10;
+        document.getElementById("score").innerText = score_shown;
+        change = true;
+      }
+      if (perf_score_shown < perf_score) {
+        perf_score_shown++;
+        document.getElementById("perf_score").innerText = perf_score_shown;
+        change = true;
+      }
+      if(change) setTimeout(countUp, 100);
+    }
+
+    function share() {
+      if (navigator.share) {
+        navigator.share({
+            title: "The Performance Game",
+            text: "I played through my website's loading experience with a score of " + score + "!",
+            url: "https://" + window.location.hostname,
+        })
+          .then(() => console.log('Successful share'))
+          .catch((error) => console.log('Error sharing', error));
+      }
+    }
+
+  </script>
 
 </head>
-<body>
-  <center>
-    <br/>
-    <div id="label">
+<body onLoad="init();">
 
+  <div class="wrapper">
+
+    <div class="box" onclick="share();">
+      Game Score<br/>
+      <button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"  style="margin-top:20px" id="score">
+        0
+      </button>
     </div>
+
+
+   <div class="box" onclick="document.location.href='https://www.webpagetest.org/lighthouse'">
+     Lighthouse Performance
+     <br/>
+    <button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" style="margin-top:20px" id="perf_score">
+      0
+     </button>
+  </div>
+
+  <div class="box" onclick="document.location.href='/'">
+    Play Again?
     <br/>
-
-    <script>
-
-      function getUrlParam(key) {
-        var match = window.location.href.match('[?&]' + key + '=([^&#]+)');
-        return match ? match[1] : null;
-      }
-
-      var urlToPlay = getUrlParam("url");
-
-      fetch('getScores?url=' + urlToPlay).then(function(response) {
-        if(response.ok) {
-          console.log("success");
-          return response.json();
-        }
-        throw new Error('Network response was not ok.');
-      }).then(function(scores) {
-        var scoresTable = document.getElementById("highscoresTable");
-        for(var i = 0; i < scores.length; i++) {
-          var trElem = document.createElement("TR");
-          scoresTable.appendChild(trElem);
-          var td1 = document.createElement("TD");
-          td1.innerText = scores[i].playerName;
-          trElem.appendChild(td1);
-          var td2 = document.createElement("TD");
-          td2.innerText = scores[i].score;
-          trElem.appendChild(td2);
-        }
-      }).catch(function(error) {
-        console.log('There has been a problem with your fetch operation: ', error.message);
-      });
-    </script>
-
-    <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp" style="width:80%;max-width:500px;">
-  <thead>
-    <tr>
-      <th>Player</th>
-      <th>Score</th>
-    </tr>
-  </thead>
-  <tbody id="highscoresTable">
-  </tbody>
-</table>
+   <button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" style="margin-top:20px" id="perf_score">
+     <i class="material-icons">refresh</i>
+    </button>
+ </div>
 
 
+    <div class="box" style="visibility:hidden;" id="share_box" onclick="share();">
+      Share your results
+      <br/>
+      <button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"  style="margin-top:20px" id="share">
+        <i class="material-icons">share</i>
+      </button>
+    </div>
 
-  </center>
+  </div>
 
   <div id="footer">
     <a href = "https://developers.google.com/web/tools/lighthouse/">Visit Lighthouse!</a>

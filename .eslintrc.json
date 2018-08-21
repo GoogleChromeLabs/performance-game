@@ -1,5 +1,8 @@
 {
   "extends": "strongloop",
+  "parserOptions": {
+    "ecmaVersion": 8
+  },
   "ecmaFeatures": {
     "modules":true,
     "arrowFunctions":true,
@@ -9,7 +12,7 @@
     "es6": true
   },
   "rules": {
-    "max-len": ["error", { "code": 140 }]
+    "max-len": ["error", { "code": 180 }]
   },
   "globals": {
     "document": true,

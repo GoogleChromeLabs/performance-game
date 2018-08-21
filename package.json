@@ -7,11 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "deploy": "gcloud app deploy",
-    "lint": "repo-tools lint",
-    "pretest": "npm run lint",
-    "system-test": "repo-tools test app",
-    "test": "npm run system-test",
-    "e2e-test": "repo-tools test deploy"
+    "lint": "eslint .",
+    "pretest": "npm run lint"
   },
   "dependencies": {
     "express": "^4.16.3",

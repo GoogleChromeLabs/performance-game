@@ -25,11 +25,13 @@ function preload() {
   game.load.image('meteroid_green', 'img/asteroid_green.png');
   game.load.image('meteroid_red', 'img/asteroid_red.png');
   game.load.image('meteroid_neutral', 'img/asteroid_neutral.png');
+  game.load.image('meteroid_orange', 'img/asteroid_orange.png');
   game.load.image('bullet', 'img/bullets.png');
   game.load.image('ship', 'img/ship.png');
   game.load.image('heart', 'img/heart.png');
   game.load.image('particle', 'img/bullets.png');
   game.load.image('popupBg', 'img/popup.png');
+  game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
 }
 
 var hints = [
@@ -43,18 +45,21 @@ var hints = [
   '52% of users\nabandon a site\nwhich loads longer\nthan 3s',
 ];
 
+var SLOWDOWN = 8;
+
 var urlToPlay; // the url being played
-var playerName; // name of the player
 
 var showLoadingText = true; // will laternatie between 'loading' and hints
 var hintInterval;
 
-var gamestate = [];
+var gamestate = {};
+var levels = [];
 var currentLevel;
 var startTime = Math.max();
 
 var ship;
 var cursors;
+var screenshot;
 
 var bullet;
 var bullets;
@@ -77,6 +82,29 @@ var popup;
 var gameOver = false;
 var popupOpenTime; // while popup is open we pause game, so we don't want to count this time
 var emitter;
+
+function getGamestateAndStart() {
+  // get gamestate from server to start game
+  urlToPlay = getUrlParam('urlToPlay');
+  fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origin'}).then(function(response) {
+    if (response.ok) {
+      console.log('success');
+      return response.json();
+    }
+    throw new Error('Network response was not ok.');
+  }).then(function(myJSON) {
+    console.log('Startin game with gamestate:');
+    console.log(myJSON); // log a copy, as we'll change the original
+    gamestate = myJSON;
+    levels = JSON.parse(JSON.stringify(gamestate.levels)); // we'll manipulate that later on, so we'll use a copy
+    currentLevel = levels.shift();
+    clearInterval(hintInterval);
+    openPopup(currentLevel.name);
+    startTime = Date.now();
+  }).catch(function(error) {
+    console.log('There has been a problem with your fetch operation: ', error.message);
+  });
+}
 
 function create() {
 
@@ -112,6 +140,12 @@ function create() {
   ship.width = 30;
   ship.health = 3;
 
+  // Screenshot of the loading progress
+  screenshot = game.add.sprite(0, 0, 'screenshot');
+  screenshot.height = 140;
+  screenshot.width = 200;
+  screenshot.visible = false;
+
   // display lives
   for (var i = 0; i < ship.health; i++) {
     var top = 5;
@@ -138,7 +172,8 @@ function create() {
 
   // label for score
   var style = { font: '20px Arial', fill: '#ff0000' };
-  scoreLabel = game.add.text(10, 10, '0', style);
+  scoreLabel = game.add.text(game.world.centerX, 25, '0', style);
+  scoreLabel.anchor.set(0.5);
 
   //  create popup for later use
   popup = game.add.sprite(game.world.centerX, game.world.centerY, 'popupBg');
@@ -152,7 +187,7 @@ function create() {
 
   var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
   keyEnter.onDown.add(function() {
-    if (gameOver)document.location.href = '/endscreen.html?url=' + urlToPlay;
+    if (gameOver)document.location.href = '/endscreen.html?url=' + urlToPlay + '&score=' + score + '&lhr_perf_score=' + gamestate.lhr_perf_score;
     else closePopup();
   }, this);
 
@@ -165,6 +200,7 @@ function create() {
     showLoadingText = !showLoadingText;
   }, 4000);
 
+  getGamestateAndStart();
 }
 
 function update() {
@@ -187,6 +223,21 @@ function update() {
     fireBullet();
   }
 
+  // update the screenshot if needed
+  var last = null;
+  for (var i = 0; i < gamestate.lhr_screenshots.length; i++) {
+    var shot = gamestate.lhr_screenshots[i];
+    if (shot.timing * SLOWDOWN < Date.now() - startTime) last = shot;
+  }
+  if (last) {
+    var loader = new Phaser.Loader(game);
+    var key = 'screenshot' + last.timing;
+    loader.image(key, 'data:image/jpeg;base64,' + last.data);
+    loader.onLoadComplete.addOnce(function(){ screenshot.loadTexture(key); screenshot.visible = true; });
+    loader.start();
+  }
+
+
   generateMeteorites();
 
   screenWrap(ship);
@@ -198,21 +249,25 @@ function update() {
   game.physics.arcade.overlap(ship, meteors, shipHit, null, this);
 
   // next level reached?
-  if (meteors.length === 0 && currentLevel.resources.length === 0 && gamestate.length > 0) {
-    while(currentLevel.resources.length==0 && gamestate.length > 0) {
-      currentLevel = gamestate.shift();
+  if (meteors.length === 0 && currentLevel.resources.length === 0 && levels.length > 0) {
+    while (currentLevel.resources.length === 0 && levels.length > 0) {
+      currentLevel = levels.shift();
     }
-    if(currentLevel.resources.length==0) {
+
+    if (currentLevel.resources.length === 0) {
       endGame(true);
+    } else {
+      // adapt our start time to new level1
+      startTime = Date.now() - currentLevel.resources[0].startTime * SLOWDOWN;
+      openPopup(currentLevel.name);
     }
-    else openPopup(currentLevel.name);
-  // was the game won?
-  } else if (gamestate.length === 0 && currentLevel.resources.length === 0 && meteors.length === 0 && ship.health > 0) {
+  } else if (levels.length === 0 && currentLevel.resources.length === 0 && meteors.length === 0 && ship.health > 0) {
+    // was the game won?
     endGame(true);
   }
 
   // update floating labels
-  for (var i = labels.length - 1; i >= 0; i--) {
+  for (i = labels.length - 1; i >= 0; i--) {
     labels[i].alpha -= 0.003;
     labels[i].y -= 2;
     if (labels[i].alpha <= 0) {
@@ -292,15 +347,16 @@ function generateMeteorites() {
   if (!currentLevel || !currentLevel.resources) return;
   for (var i = currentLevel.resources.length - 1; i >= 0; i--) {
     var item = currentLevel.resources[i];
-    if (item.startTime * 20 < Date.now() - startTime) { // 20x time slowdown compared to real load
-      var size = item.transferSize/1000;
+    if (item.startTime * SLOWDOWN < Date.now() - startTime) { // 20x time slowdown compared to real load
+      var size = item.transferSize / 1000;
       size = Math.max(size, 35);
       size = Math.min(size, 300);
       var rnd = Math.random();
       var c = null;
       var asset_name = 'meteroid_neutral';
       if (item.coverage && item.coverage > 75) asset_name = 'meteroid_green';
-      if (item.coverage && item.coverage < 25) asset_name = 'meteroid_red';
+      else if (item.coverage && item.coverage > 50) asset_name = 'meteroid_red';
+      else if (item.coverage && item.coverage > 0) asset_name = 'meteroid_orange';
       // psoition new meteors on random point outside game
       if (rnd < 0.25) c = meteors.create(0, game.world.randomY, asset_name);
       else if (rnd < 0.5) c = meteors.create(game.width, game.world.randomY, asset_name);
@@ -308,10 +364,11 @@ function generateMeteorites() {
       else c = meteors.create(game.world.randomX, game.height, asset_name);
       c.width = size;
       c.height = size;
+      c.anchor.set(0.5);
       c.name = 'met' + i;
       c.label = item.label;
-      c.size = item.transferSize/1000;
-      c.health = item.size; // download size represents health
+      c.size = item.transferSize / 1000;
+      c.health = item.transferSize / 1000; // download size represents health
       // c.body.immovable = true;
       game.physics.enable(c, Phaser.Physics.ARCADE);
       c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * 60 + 40, 10));
@@ -337,42 +394,12 @@ function shipHit(ship, meteor) {
 }
 
 
-// get gamestate from server to start game
-urlToPlay = getUrlParam('urlToPlay');
-playerName = getUrlParam('playerName');
-fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origin'}).then(function(response) {
-  if (response.ok) {
-    console.log('success');
-    return response.json();
-  }
-  throw new Error('Network response was not ok.');
-}).then(function(myJSON) {
-  console.log('Startin game with gamestate:');
-  console.log(JSON.parse(JSON.stringify(myJSON)));  // log a copy, as we'll change the original
-  gamestate = myJSON;
-  currentLevel = gamestate.shift();
-  clearInterval(hintInterval);
-  openPopup(currentLevel.name);
-  startTime = Date.now();
-}).catch(function(error) {
-  console.log('There has been a problem with your fetch operation: ', error.message);
-});
-
 function getUrlParam(key) {
   var match = window.location.href.match('[?&]' + key + '=([^&#]+)');
   return match ? match[1] : null;
 }
 
 function endGame(won) {
-  fetch('saveScore', {
-    method: 'POST',
-    mode: 'cors', // no-cors, cors, *same-origin
-    body: JSON.stringify({playerName: playerName, score: score, url: urlToPlay}),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).catch(error => console.error('Error sending score:', error))
-    .then(response => console.log('Success sending score:', response));
   gameOver = true;
   if (won) openPopup('You won!');
   else openPopup('Sorry, you lost!');
@@ -393,5 +420,6 @@ function closePopup() {
   game.paused = false;
   popupLabel.visible = false;
   popup.visible = false;
+  popupLabel.text = ''; // set text to empty, otherwise it might vi visible for a split second on next open
   startTime += Date.now() - popupOpenTime; // deduct the time the popup was open, as game was paused
 }
