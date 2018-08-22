@@ -48,6 +48,7 @@ There are many excellent tools, metrics and docs regarding page speed, but these
 8. Push code back to your fork
 ```none
   $ git add .
+  $ git commit -m "update message"
   $ git push
   ```
 9. Create PR from this via UI (see [here](https://help.github.com/articles/creating-a-pull-request-from-a-fork/))
