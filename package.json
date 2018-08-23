@@ -11,10 +11,7 @@
     "pretest": "npm run lint"
   },
   "dependencies": {
-    "@types/body-parser": "^1.16.8",
     "ajv": "^6.5.2",
-    "body-parser": "^1.18.2",
-    "connect-timeout": "latest",
     "express": "^4.16.3",
     "puppeteer": "^1.3.0",
     "lighthouse": "^3.x",

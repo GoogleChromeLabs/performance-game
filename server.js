@@ -15,7 +15,6 @@ limitations under the License.
 */
 'use strict';
 
-const bodyParser = require('body-parser');
 const {URL} = require('url');
 
 const express = require('express');
@@ -24,9 +23,6 @@ const lighthouse = require('lighthouse');
 
 // create express server
 const app = express();
-
-// set up body parsing to later on parse json from responses
-app.use(bodyParser.json());
 
 
 // setting up routes for the various files
