@@ -32,25 +32,21 @@ There are many excellent tools, metrics and docs regarding page speed, but these
   ```none
   $ npm install 
   ```
-4. Create a .data folder
+4. Run the game via node
   ```none
-  $ mkdir .data 
+  $ node run start
   ```
-5. Run the game via node
+5. Do your changes, test, repeat
+6. Lint the code via
   ```none
-  $ node server.js 
+  $ npm run lint
   ```
-6. Do your changes, test, repeat
-7. Lint the code via
-  ```none
-  $ esline public/*.js
-  ```
-8. Push code back to your fork
+7. Push code back to your fork
 ```none
   $ git add .
   $ git commit -m "update message"
   $ git push
   ```
-9. Create PR from this via UI (see [here](https://help.github.com/articles/creating-a-pull-request-from-a-fork/))
+8. Create PR from this via UI (see [here](https://help.github.com/articles/creating-a-pull-request-from-a-fork/))
 
 

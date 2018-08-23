@@ -1,4 +1,4 @@
-/**-
+/**
 Copyright 2018 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,33 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-const fs = require('fs')
-const path = require('path')
-const bodyParser = require('body-parser')
-const parseCanonicalUrl = require('parse-canonical-url');
-const low = require('lowdb')
-const FileSync = require('lowdb/adapters/FileSync')
-const adapter = new FileSync('.data/db.json')
-const db = low(adapter)
+'use strict';
+
+const bodyParser = require('body-parser');
+const {URL} = require('url');
 
 const express = require('express');
 const puppeteer = require('puppeteer');
+const lighthouse = require('lighthouse');
 
-//for all of these we simulate a mobile phone - we'll take the 5x for now
-const devices = require('puppeteer/DeviceDescriptors');
-const phone = devices['Nexus 5X'];
-
-//create express server
+// create express server
 const app = express();
 
 // set up body parsing to later on parse json from responses
 app.use(bodyParser.json());
 
 
-//setting up routes for the various files
+// setting up routes for the various files
 app.use(express.static('public'));
 
-/*app.get('/',function(req,res){
+/* app.get('/',function(req,res){
      res.sendFile(path.join(__dirname, 'index.html'));
 });
 app.get('/game.html',function(req,res){
@@ -50,149 +43,127 @@ app.get('/endscreen.html',function(req,res){
 });*/
 
 
-// save a new highscore
-app.post("/saveScore", function (request, response) {
-  var urlPlayed = decodeURIComponent(request.body.url);
-  // we'll base64 the url, to avoid problems with special chars etc.
-  var urlBase64 = Buffer.from(urlPlayed).toString('base64');
-  var scores = db.get(urlBase64).value();
-  if(!scores) scores = [];
-  //todo: verify player name is safe - but given we'll use key-value store we're safe from sql injection anyway
-  scores.push({ playerName: request.body.playerName, score: request.body.score });
-  // don't save too many scores, we only need ten max
-  if(scores.length > 10) {
-    var smallestIndex = 0;
-    var smallestScore = Number.MAX_VALUE;
-    for(var i = 0; i < scores.length; i++) {
-      if(scores[i] <  smallestScore) {
-        smallestIndex = i;
-        smallestScore = scores[i];
-      }
-    }
-    scores.splice(smallestIndex,1);
-  }
-  // save back the scores list for this url
-  db.set(urlBase64, scores).write();
-  console.log("New score inserted in the database: " + urlPlayed + " - " + request.body.playerName + " - " + request.body.score);
-  response.sendStatus(200);
-});
-
-// get highscores
-app.get("/getScores", function (request, response) {
-  var urlPlayed = decodeURIComponent(request.query.url);
-  // we'll base64 the url, to avoid problems with special chars etc.
-  var urlBase64 = Buffer.from(urlPlayed).toString('base64');
-  var scores = db.get(urlBase64).value();
-  if(!scores) scores = [];
-  console.log("Returning scores for url " + urlPlayed + ": " + JSON.stringify(scores));
-  response.contentType('application/json');
-  response.end(JSON.stringify(scores));
-});
-
 // this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
 // All this will be used to create a level to play through
-app.get("/gamestate.json", async (request, response) => {
+app.get('/gamestate.json', async(request, response) => {
   // todo: verify this is multi-thread safe and can handle the load
   const browser = await puppeteer.launch({
-     args: ['--no-sandbox'],
-     timeout: 10000
-   });
-	const page = await browser.newPage();
+    args: ['--no-sandbox'],
+    timeout: 10000,
+  });
   var url = request.query.url;
-  console.log("Starting game for url: " + url);
-  var startTime;
-	await page.emulate(phone);
+  console.log('Starting game for url: ' + url);
 
-  var resources = [];
+  // now run lighthouse
+  // Lighthouse will open URL. Puppeteer observes `targetchanged` and sets up network conditions.
+  // Possible race condition.
+  const {lhr} = await lighthouse(url, {
+    port: (new URL(browser.wsEndpoint())).port,
+    output: 'json',
+    logLevel: 'error',
+    throttlingMethod: 'devtools', // without that resource loading timeline doesn't fit perf metrics
+  });
 
-  // capture and log all resources loaded
-  page.on('response', response => {
-    var url = response.url();
-    var length = response.headers()["content-length"];
-    if(!length) length = 1;
-    var type = response.headers()["content-type"];
-    if(!url || !type) return;
-    length = length/1000;   // let's work in kb, more intuitive
-    var name = url.split('/').pop().replace(/[^a-zA-Z._ ]{3,}/g, "*");  // get just filename, and replace everything unreadable with * (fingerprints, hashes etc.)
-    if(name.includes('?')) name = name.substring(0, name.indexOf('?'));  // also strip off url params
-    if(!name) name = "index.html";  //empty path means index.html
-    //only do this for common mime types
-    if(type.includes("text/html") || type.includes("text/css") || type.includes("javascript") || type.includes("image/") || type.includes("font/") || !startTime) {
-      if(!startTime) startTime = Date.now();
-      resources.push({"time": Date.now() - startTime, "label": name, "size": length, "url": url, "coverage": 100});
-    }
-  })
+  // for testing and debugging we can write out the result json, you Can
+  // inspect it via the lighthouse viewer here: https://googlechrome.github.io/lighthouse/viewer/
+  // fs.writeFile('myjsonfile.json', JSON.stringify(lhr), 'utf8', function(){});
 
-  // collect coverage metrics
-  await Promise.all([
-    page.coverage.startJSCoverage(),
-    page.coverage.startCSSCoverage()
-  ]);
+  // get the audit results from lighthouse
+  var lhr_fcp = lhr.audits['first-contentful-paint'].rawValue;
+  var lhr_psi = lhr.audits['speed-index'].rawValue;
+  var lhr_interactive = lhr.audits['interactive'].rawValue;
+  var lhr_screenshots = lhr.audits['screenshot-thumbnails'].details.items;
+  var lhr_network = lhr.audits['network-requests'].details.items;
+  var lhr_unused_css = lhr.audits['unused-css-rules'].details.items;
+  var lhr_optimized_images = lhr.audits['uses-optimized-images'].details.items;
+  var lhr_uses_webp = lhr.audits['uses-webp-images'].details.items;
+  var lhr_perf_score = lhr.categories.performance.score;
+  var lhr_pwa_score = lhr.categories.pwa.score;
+  // var lhr_unused_js = lhr.audits["unused-js-rules"].details.items;
 
-  // now load the page. This will trigger the response logging, adn coverage monitoring
-  await page.goto(url);
-  // we'll need to wait a sec, otherwise FMP isn't calculated yet
-  await page.waitFor(1000);
+  // merge several of the byteefficiency audits in a general 'wasted' hashmap
+  var wasted = {};
+  addToWasted(lhr_unused_css, wasted, 'unused-css');
+  addToWasted(lhr_optimized_images, wasted, 'optimized-images');
+  addToWasted(lhr_uses_webp, wasted, 'optimized-images');
 
-  // stop coverage monitoring, collect coverage stats
-  var coverage = {};
-  const [jsCoverage, cssCoverage] = await Promise.all([
-    page.coverage.stopJSCoverage(),
-    page.coverage.stopCSSCoverage(),
-  ]);
-  // calculate the coverage for every resource
-  let totalBytes = 0;
-  let usedBytes = 0;
-  for (const entry of [...jsCoverage, ...cssCoverage]) {
-    totalBytes += entry.text.length;
-    for (const range of entry.ranges) {
-      usedBytes += range.end - range.start - 1;
-    }
-    coverage[entry.url] = usedBytes / totalBytes * 100; // coverage in percent
-  }
+  console.log('Lighthouse  finished, fcp: ' + lhr_fcp + ' - PSI: ' + lhr_psi + ' - TTI: ' + lhr_interactive);
 
-
-  // collecte performance metrics
-  var fmp = (await page._client.send('Performance.getMetrics')).metrics.find(x => x.name === "FirstMeaningfulPaint").value/1000;
-  const firstPaint = await page.evaluate("window.performance.getEntriesByName('first-paint')[0].startTime;");
-  const domInteractive = await page.evaluate("window.performance.timing.domInteractive - window.performance.timing.navigationStart");
-  const loadEventStart = await page.evaluate("window.performance.timing.loadEventStart - window.performance.timing.navigationStart");
-  console.log(firstPaint + " - " + fmp + " - " + domInteractive + " - " + loadEventStart);
-  //fmp seems sometimes smaller than firstpaint - as a hack take loadevent then for now
-  if(fmp < firstPaint) fmp = loadEventStart;
   await browser.close();
 
-  //now segment resource loading into levels based on performance metrics
+  // now segment resource loading into levels based on performance metrics
   var resources1 = [];
   var resources2 = [];
   var resources3 = [];
-  for(var i = 0; i < resources.length; i++) {
-    var res = resources[i];
-    if(coverage[res.url]) res.coverage = coverage[res.url];
-    if(res.time < firstPaint) resources1.push(res);
-    else if(res.time < fmp) resources2.push(res);
-    else resources3.push(res);
+  var resources4 = [];
+  for (var i = 0; i < lhr_network.length; i++) {
+    var res = lhr_network[i];
+    var name = res.url.split('/').pop().replace(/[^a-zA-Z._ ]{3,}/g, '*'); // get just filename, and replace everything unreadable with * (fingerprints, hashes etc.)
+    if (name.includes('?')) name = name.substring(0, name.indexOf('?')); // also strip off url params
+    if (!name) name = res.url.substring(res.url.indexOf('//') + 2); // let's use host if path is empty
+    res.label = name;
+    res.coverage = 100;
+    if (wasted[res.url]) res.coverage = wasted[res.url].coverage;
+    if (res.endTime < lhr_fcp) resources1.push(res);
+    else if (res.endTime < lhr_psi) resources2.push(res);
+    else if (res.endTime < lhr_interactive) resources3.push(res);
+    else resources4.push(res);
   }
-  var level1 = {"name": "Level 1\nFirst Paint\nHit ENTER to start", "resources": resources1};
-  var level2 = {"name": "Level 2\nMeaningful Paint\nHit ENTER to start", "resources": resources2};
-  var level3 = {"name": "Level 3\nFull Load\nHit ENTER to start", "resources": resources3};
-  var gameplay = [level1, level2, level3];
+  var levels = [];
+  var level1 = {name: 'First Contentful Paint\nHit ENTER to start', resources: resources1};
+  var level2 = {name: 'Speed Index\nHit ENTER to start', resources: resources2};
+  var level3 = {name: 'Interactive\nHit ENTER to start', resources: resources3};
+  var level4 = {name: 'Full Load\nHit ENTER to start', resources: resources4};
+  // only add levels with resources in them
+  if (resources1.length > 0) levels.push(level1);
+  if (resources2.length > 0) levels.push(level2);
+  if (resources3.length > 0) levels.push(level3);
+  if (resources4.length > 0) levels.push(level4);
+  // fix the naming, in case we omitted empty levels
+  for (i = 0; i < levels.length; i++) {
+    levels[i].name = 'Level ' + (i+1) + '\n' + levels[i].name;
+  }
+  // finalize gamestate
+  var gameplay = {
+    lhr_perf_score: lhr_perf_score,
+    lhr_pwa_score: lhr_pwa_score,
+    lhr_screenshots: lhr_screenshots,
+    levels: levels,
+  };
 
-  //console.log(JSON.stringify(gameplay, null, 4));
+  // console.log(JSON.stringify(gameplay, null, 4));
   // send out gameplay
-  response.header("Access-Control-Allow-Origin", "*");
+  response.header('Access-Control-Allow-Origin', '*');
   response.contentType('application/json');
   response.end(JSON.stringify(gameplay));
 });
 
+function addToWasted(auditItems, wastedList, auditName) {
+  for (var i = 0; i < auditItems.length; i++) {
+    var item = auditItems[i];
+    if (!wastedList[item.url]) wastedList[item.url] = {coverage: -1}; // -1 for unknown
+    var newCoverage;
+    if (item.wastedPercent) {
+      newCoverage = 100 - item.wastedPercent;
+    } else {
+      newCoverage = 100 - item.wastedBytes * 100 / item.totalBytes;
+    }
+    var oldCoverage = wastedList[item.url].coverage;
+    if (oldCoverage !== -1 && newCoverage > oldCoverage) continue;
+    wastedList[item.url].coverage = newCoverage;
+    wastedList[item.url].type = auditName;
+  }
+}
+
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
 
-
-var listener = app.listen(8000, function () {
+// Start the server
+const PORT = process.env.PORT || 8080;
+var listener = app.listen(PORT, function() {
   console.log('Your app is listening on port ' + listener.address().port);
 });

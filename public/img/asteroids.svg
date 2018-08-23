@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
+   sodipodi:docname="asteroids.svg">
+  <defs
+     id="defs2">
+    <filter
+       inkscape:label="Rough and Glossy"
+       inkscape:menu="Textures"
+       inkscape:menu-tooltip="Crumpled glossy paper effect which can be used for pictures as for objects"
+       style="color-interpolation-filters:sRGB;"
+       id="filter992">
+      <feTurbulence
+         type="fractalNoise"
+         numOctaves="7"
+         baseFrequency="0.02"
+         seed="55"
+         result="result0"
+         id="feTurbulence974" />
+      <feDiffuseLighting
+         surfaceScale="4"
+         diffuseConstant="1"
+         kernelUnitLength="1"
+         result="result1"
+         in="result0"
+         id="feDiffuseLighting978">
+        <feDistantLight
+           azimuth="235"
+           elevation="60"
+           id="feDistantLight976" />
+      </feDiffuseLighting>
+      <feSpecularLighting
+         in="result0"
+         surfaceScale="3"
+         specularConstant="1"
+         specularExponent="25"
+         kernelUnitLength="1"
+         result="result3"
+         id="feSpecularLighting982">
+        <feDistantLight
+           azimuth="235"
+           elevation="55"
+           id="feDistantLight980" />
+      </feSpecularLighting>
+      <feComposite
+         in="result1"
+         in2="SourceGraphic"
+         operator="arithmetic"
+         k1="1"
+         result="result2"
+         id="feComposite984" />
+      <feComposite
+         in="result2"
+         in2="result3"
+         operator="arithmetic"
+         k2="1"
+         k3="1"
+         result="result4"
+         id="feComposite986" />
+      <feComposite
+         in2="SourceAlpha"
+         operator="in"
+         in="result4"
+         result="fbSourceGraphic"
+         id="feComposite988" />
+      <feDisplacementMap
+         scale="7"
+         yChannelSelector="G"
+         xChannelSelector="R"
+         in2="result0"
+         id="feDisplacementMap990" />
+    </filter>
+    <filter
+       y="-0.15"
+       height="1.3"
+       x="-0.15"
+       width="1.3"
+       inkscape:menu-tooltip="Aquarelle paper effect which can be used for pictures as for objects"
+       inkscape:menu="Textures"
+       inkscape:label="Rough Paper"
+       style="color-interpolation-filters:sRGB;"
+       id="filter1176">
+      <feTurbulence
+         type="fractalNoise"
+         baseFrequency="0.04"
+         numOctaves="5"
+         seed="0"
+         result="result4"
+         id="feTurbulence1162" />
+      <feDisplacementMap
+         in="SourceGraphic"
+         in2="result4"
+         yChannelSelector="G"
+         xChannelSelector="R"
+         scale="10"
+         result="result3"
+         id="feDisplacementMap1164" />
+      <feDiffuseLighting
+         lighting-color="rgb(233,230,215)"
+         diffuseConstant="1"
+         surfaceScale="2"
+         result="result1"
+         in="result4"
+         id="feDiffuseLighting1168">
+        <feDistantLight
+           azimuth="235"
+           elevation="40"
+           id="feDistantLight1166" />
+      </feDiffuseLighting>
+      <feComposite
+         operator="in"
+         in="result3"
+         in2="result1"
+         result="result2"
+         id="feComposite1170" />
+      <feComposite
+         in2="result1"
+         result="result5"
+         operator="arithmetic"
+         k1="1.7"
+         id="feComposite1172" />
+      <feBlend
+         in="result5"
+         in2="result3"
+         mode="normal"
+         id="feBlend1174" />
+    </filter>
+    <filter
+       inkscape:label="Rough and Glossy"
+       inkscape:menu="Textures"
+       inkscape:menu-tooltip="Crumpled glossy paper effect which can be used for pictures as for objects"
+       style="color-interpolation-filters:sRGB;"
+       id="filter1198">
+      <feTurbulence
+         type="fractalNoise"
+         numOctaves="7"
+         baseFrequency="0.02"
+         seed="55"
+         result="result0"
+         id="feTurbulence1180" />
+      <feDiffuseLighting
+         surfaceScale="4"
+         diffuseConstant="1"
+         kernelUnitLength="1"
+         result="result1"
+         in="result0"
+         id="feDiffuseLighting1184">
+        <feDistantLight
+           azimuth="235"
+           elevation="60"
+           id="feDistantLight1182" />
+      </feDiffuseLighting>
+      <feSpecularLighting
+         in="result0"
+         surfaceScale="3"
+         specularConstant="1"
+         specularExponent="25"
+         kernelUnitLength="1"
+         result="result3"
+         id="feSpecularLighting1188">
+        <feDistantLight
+           azimuth="235"
+           elevation="55"
+           id="feDistantLight1186" />
+      </feSpecularLighting>
+      <feComposite
+         in="result1"
+         in2="SourceGraphic"
+         operator="arithmetic"
+         k1="1"
+         result="result2"
+         id="feComposite1190" />
+      <feComposite
+         in="result2"
+         in2="result3"
+         operator="arithmetic"
+         k2="1"
+         k3="1"
+         result="result4"
+         id="feComposite1192" />
+      <feComposite
+         in2="SourceAlpha"
+         operator="in"
+         in="result4"
+         result="fbSourceGraphic"
+         id="feComposite1194" />
+      <feDisplacementMap
+         scale="7"
+         yChannelSelector="G"
+         xChannelSelector="R"
+         in2="result0"
+         id="feDisplacementMap1196" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="-121.38551"
+     inkscape:cy="735.64092"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1440"
+     inkscape:window-height="856"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:snap-global="false" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#833f00;fill-opacity:1;stroke:#6e2700;stroke-width:1.36500001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 35.612257,8.0780538 9.909876,35.292339 9.153924,70.066146 l 34.773809,22.67857 52.916669,-13.60714 -0.75596,-24.94643 -5.29166,-39.30952 H 70.386066 Z"
+       id="path1200"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path1235"
+       d="m 42.082169,24.708994 -18.872743,16.900952 2.149124,26.86844 21.791013,18.7801 36.692469,-13.54758 5.44806,-18.26435 -4.19683,-28.780184 -18.455677,6.047619 z"
+       style="fill:#a75c16;fill-opacity:1;stroke:none;stroke-width:0.20193364;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       style="fill:#bd6a1d;fill-opacity:1;stroke:none;stroke-width:0.13824962;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 45.452675,34.082804 -14.899225,8.385772 7.521219,15.95043 12.695422,15.00019 23.017781,-10.12422 7.11638,-7.80252 -3.10201,-18.25085 -12.3429,5.29167 z"
+       id="path1237"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path1251"
+       cx="71.708977"
+       cy="48.332516"
+       rx="2.8348215"
+       ry="3.2127976"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <circle
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path1253"
+       cx="53.566128"
+       cy="61.183704"
+       r="3.5907736"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path1255"
+       cx="51.487263"
+       cy="46.631626"
+       rx="2.6458333"
+       ry="2.2678571"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path1257"
+       cx="63.771481"
+       cy="55.136089"
+       rx="2.4568453"
+       ry="1.7008928"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path1261"
+       d="m 36.146796,112.20573 -27.8405372,34.69783 13.1420632,21.41033 -1.054693,21.49553 25.67226,12.94291 51.313052,-19.48708 -0.75596,-24.94643 -6.895277,-34.49867 -18.807099,-14.43255 z"
+       style="fill:#833f00;fill-opacity:1;stroke:#6e2700;stroke-width:1.36500001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       sodipodi:nodetypes="cccccccccc"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_red.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       sodipodi:nodetypes="cccccccccc"
+       style="fill:#871804;fill-opacity:1;stroke:none;stroke-width:0.20193364;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 41.54763,125.62944 -23.149055,22.24634 12.839905,19.38489 -1.398892,18.20995 16.240897,10.7264 38.296086,-18.35844 5.44806,-18.26435 -7.938603,-25.57295 -15.782982,-9.45401 z"
+       id="path1263"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_red.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:connector-curvature="0"
+       id="path1265"
+       d="m 43.314519,135.53778 -14.364686,14.80024 10.728453,16.48497 3.608258,20.34558 34.243101,-15.46961 3.909146,-12.07883 -4.705627,-14.50908 -11.273822,-11.27904 z"
+       style="fill:#a70d06;fill-opacity:1;stroke:none;stroke-width:0.13824962;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_red.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       ry="3.2127976"
+       rx="2.8348215"
+       cy="152.46019"
+       cx="72.243515"
+       id="ellipse1267"
+       style="fill:#871804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_red.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <circle
+       r="3.5907736"
+       cy="172.79492"
+       cx="57.307899"
+       id="circle1269"
+       style="fill:#871804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_red.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       ry="2.2678571"
+       rx="2.6458333"
+       cy="150.75931"
+       cx="52.021801"
+       id="ellipse1271"
+       style="fill:#871804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_red.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       ry="1.7008928"
+       rx="2.4568453"
+       cy="164.07462"
+       cx="65.375099"
+       id="ellipse1273"
+       style="fill:#871804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_red.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       style="fill:#3d3f0b;fill-opacity:1;stroke:#032000;stroke-width:1.36500001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 35.612257,207.88822 9.9098759,235.1025 9.153924,269.87631 l 34.773809,22.67858 52.916669,-13.60715 -0.75596,-24.94643 -5.29166,-39.30952 H 70.386066 Z"
+       id="path1275"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_green.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path1277"
+       d="m 41.013091,221.31193 -21.010899,16.90095 1.614585,29.54113 25.532786,19.31464 36.692469,-13.54758 5.44806,-18.26435 -4.19683,-28.78018 -18.455677,6.04762 z"
+       style="fill:#1b3804;fill-opacity:1;stroke:none;stroke-width:0.20193364;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_green.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <path
+       style="fill:#316500;fill-opacity:1;stroke:none;stroke-width:0.13824962;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 42.77998,231.22027 -12.22653,11.05847 2.175828,22.89944 19.109891,14.46565 25.155937,-12.26238 3.909146,-12.07883 -3.10201,-18.25085 -12.3429,5.29167 z"
+       id="path1279"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_green.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       style="fill:#0a3804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="ellipse1281"
+       cx="71.708977"
+       cy="248.14268"
+       rx="2.8348215"
+       ry="3.2127976"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_green.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <circle
+       style="fill:#0a3804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="circle1283"
+       cx="50.358894"
+       cy="264.20111"
+       r="3.5907736"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_green.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       style="fill:#0a3804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="ellipse1285"
+       cx="51.487263"
+       cy="246.4418"
+       rx="2.6458333"
+       ry="2.2678571"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_green.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <ellipse
+       style="fill:#0a3804;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="ellipse1287"
+       cx="64.840561"
+       cy="259.75711"
+       rx="2.4568453"
+       ry="1.7008928"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_green.png"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-ydpi="66.370369" />
+    <rect
+       style="fill:#bd6a1d;fill-opacity:1;stroke:#833f00;stroke-width:2.69525886;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1308"
+       width="77.304741"
+       height="57.304741"
+       x="122.50816"
+       y="80.972092"
+       rx="7.1857824"
+       ry="6.8174124"
+       inkscape:export-filename="/Users/mschierle/Downloads/popup.png"
+       inkscape:export-xdpi="127"
+       inkscape:export-ydpi="127" />
+    <path
+       inkscape:export-ydpi="66.370369"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       inkscape:connector-curvature="0"
+       id="path888"
+       d="m -64.324673,8.834006 -17.76488,25.324405 17.008929,30.994044 1.889883,29.482147 L -1.580621,79.137576 4.0890143,53.057217 -0.44669078,14.881626 -29.172883,0.14055457 Z"
+       style="fill:#ff5424;fill-opacity:1;stroke:#ce1300;stroke-width:1.36500001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       sodipodi:nodetypes="ccccccccc" />
+    <path
+       inkscape:export-ydpi="66.370369"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       sodipodi:nodetypes="ccccccccc"
+       style="fill:#ff8424;fill-opacity:1;stroke:none;stroke-width:0.20193364;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m -58.232735,20.17328 -15.470959,15.767023 18.780078,23.466654 -0.509581,25.583672 40.850208,-11.279723 11.8736568,-19.776255 -10.6224268,-27.268279 -14.675915,-7.9375 z"
+       id="path890"
+       inkscape:connector-curvature="0" />
+    <path
+       inkscape:export-ydpi="66.370369"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:connector-curvature="0"
+       id="path892"
+       d="m -54.484252,28.413161 -10.363512,8.007796 16.592646,17.084359 0.600188,19.91388 23.017783,-10.12422 7.116379,-7.80252 -3.102009,-18.25085 -9.319092,-9.449401 z"
+       style="fill:#ffa835;fill-opacity:1;stroke:none;stroke-width:0.13824962;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <ellipse
+       inkscape:export-ydpi="66.370369"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       ry="3.2127976"
+       rx="2.8348215"
+       cy="48.332516"
+       cx="-26.716036"
+       id="ellipse894"
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <circle
+       inkscape:export-ydpi="66.370369"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       r="3.5907736"
+       cy="39.639061"
+       cx="-36.543415"
+       id="circle896"
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <ellipse
+       inkscape:export-ydpi="66.370369"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       ry="2.2678571"
+       rx="2.6458333"
+       cy="46.631626"
+       cx="-46.937759"
+       id="ellipse898"
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <ellipse
+       inkscape:export-ydpi="66.370369"
+       inkscape:export-xdpi="66.370369"
+       inkscape:export-filename="/Users/mschierle/Downloads/asteroid_neutral.png"
+       ry="1.7008928"
+       rx="2.4568453"
+       cy="55.136089"
+       cx="-34.653534"
+       id="ellipse900"
+       style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+  </g>
+</svg>
