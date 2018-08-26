@@ -72,16 +72,21 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_network = lhr.audits['network-requests'].details.items;
   var lhr_unused_css = lhr.audits['unused-css-rules'].details.items;
   var lhr_optimized_images = lhr.audits['uses-optimized-images'].details.items;
+  var lhr_responsive_images = lhr.audits['uses-responsive-images'].details.items;
+  var lhr_offscreen_images = lhr.audits['offscreen-images'].details.items;
   var lhr_uses_webp = lhr.audits['uses-webp-images'].details.items;
   var lhr_perf_score = lhr.categories.performance.score;
   var lhr_pwa_score = lhr.categories.pwa.score;
-  // var lhr_unused_js = lhr.audits["unused-js-rules"].details.items;
+  var lhr_unused_js = lhr.audits["unused-javascript"]? lhr.audits["unused-javascript"].details.items : [];
 
   // merge several of the byteefficiency audits in a general 'wasted' hashmap
   var wasted = {};
   addToWasted(lhr_unused_css, wasted, 'unused-css');
   addToWasted(lhr_optimized_images, wasted, 'optimized-images');
   addToWasted(lhr_uses_webp, wasted, 'optimized-images');
+  addToWasted(lhr_responsive_images, wasted, 'optimized-images');
+  addToWasted(lhr_offscreen_images, wasted, 'offscreen-images');
+  addToWasted(lhr_unused_js, wasted, 'unused-javascript');
 
   console.log('Lighthouse  finished, fcp: ' + lhr_fcp + ' - PSI: ' + lhr_psi + ' - TTI: ' + lhr_interactive);
 

@@ -45,8 +45,6 @@ var hints = [
   '52% of users\nabandon a site\nwhich loads longer\nthan 3s',
 ];
 
-var SLOWDOWN = 8;
-
 var urlToPlay; // the url being played
 
 var showLoadingText = true; // will laternatie between 'loading' and hints
@@ -55,7 +53,7 @@ var hintInterval;
 var gamestate = {};
 var levels = [];
 var currentLevel;
-var startTime = Math.max();
+var currentTime = -1;  // the current time in game with respect to resource loading in lighthouse
 
 var ship;
 var cursors;
@@ -80,7 +78,6 @@ var scoreLabel;
 
 var popup;
 var gameOver = false;
-var popupOpenTime; // while popup is open we pause game, so we don't want to count this time
 var emitter;
 
 function getGamestateAndStart() {
@@ -100,7 +97,6 @@ function getGamestateAndStart() {
     currentLevel = levels.shift();
     clearInterval(hintInterval);
     openPopup(currentLevel.name);
-    startTime = Date.now();
   }).catch(function(error) {
     console.log('There has been a problem with your fetch operation: ', error.message);
   });
@@ -142,8 +138,8 @@ function create() {
 
   // Screenshot of the loading progress
   screenshot = game.add.sprite(0, 0, 'screenshot');
-  screenshot.height = 140;
-  screenshot.width = 200;
+  screenshot.height = 168;
+  screenshot.width = 240;
   screenshot.visible = false;
 
   // display lives
@@ -223,11 +219,20 @@ function update() {
     fireBullet();
   }
 
+  // update the game time - we consider the minimum end time of asteroids in the gamefield as current time
+  currentTime = Number.MAX_VALUE;
+  if(currentLevel.resources.length > 0) currentTime = currentLevel.resources[0].endTime;
+  for (var i = 0; i < meteors.children.length; i++) {
+    var asteroid = meteors.children[i];
+    currentTime = Math.min(currentTime, asteroid.endTime);
+  }
+
+
   // update the screenshot if needed
   var last = null;
   for (var i = 0; i < gamestate.lhr_screenshots.length; i++) {
     var shot = gamestate.lhr_screenshots[i];
-    if (shot.timing * SLOWDOWN < Date.now() - startTime) last = shot;
+    if (shot.timing < currentTime) last = shot;
   }
   if (last) {
     var loader = new Phaser.Loader(game);
@@ -257,8 +262,6 @@ function update() {
     if (currentLevel.resources.length === 0) {
       endGame(true);
     } else {
-      // adapt our start time to new level1
-      startTime = Date.now() - currentLevel.resources[0].startTime * SLOWDOWN;
       openPopup(currentLevel.name);
     }
   } else if (levels.length === 0 && currentLevel.resources.length === 0 && meteors.length === 0 && ship.health > 0) {
@@ -347,7 +350,7 @@ function generateMeteorites() {
   if (!currentLevel || !currentLevel.resources) return;
   for (var i = currentLevel.resources.length - 1; i >= 0; i--) {
     var item = currentLevel.resources[i];
-    if (item.startTime * SLOWDOWN < Date.now() - startTime) { // 20x time slowdown compared to real load
+    if (item.startTime < currentTime) {
       var size = item.transferSize / 1000;
       size = Math.max(size, 35);
       size = Math.min(size, 300);
@@ -367,6 +370,8 @@ function generateMeteorites() {
       c.anchor.set(0.5);
       c.name = 'met' + i;
       c.label = item.label;
+      c.startTime = item.startTime;
+      c.endTime = item.endTime;
       c.size = item.transferSize / 1000;
       c.health = item.transferSize / 1000; // download size represents health
       // c.body.immovable = true;
@@ -413,7 +418,6 @@ function openPopup(msg) {
   popup.visible = true;
   popupLabel.visible = true;
   game.paused = true;
-  popupOpenTime = Date.now();
 }
 
 function closePopup() {
@@ -421,5 +425,4 @@ function closePopup() {
   popupLabel.visible = false;
   popup.visible = false;
   popupLabel.text = ''; // set text to empty, otherwise it might vi visible for a split second on next open
-  startTime += Date.now() - popupOpenTime; // deduct the time the popup was open, as game was paused
 }
