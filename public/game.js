@@ -226,6 +226,7 @@ function update() {
     var asteroid = meteors.children[i];
     currentTime = Math.min(currentTime, asteroid.endTime);
   }
+  if(!currentTime) currentTime = Number.MAX_VALUE;
 
 
   // update the screenshot if needed
