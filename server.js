@@ -77,7 +77,12 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_uses_webp = lhr.audits['uses-webp-images'].details.items;
   var lhr_perf_score = lhr.categories.performance.score;
   var lhr_pwa_score = lhr.categories.pwa.score;
-  var lhr_unused_js = lhr.audits["unused-javascript"]? lhr.audits["unused-javascript"].details.items : [];
+  var lhr_has_sw = lhr.audits['service-worker'].rawValue;
+  var lhr_has_a2hs = lhr.audits['webapp-install-banner'].rawValue;
+  var lhr_has_http2 = lhr.audits['uses-http2'].rawValue;
+  var lhr_has_https = lhr.audits['is-on-https'].rawValue;
+  var lhr_has_offline = lhr.audits['works-offline'].rawValue;
+  var lhr_unused_js = lhr.audits['unused-javascript'] ? lhr.audits['unused-javascript'].details.items : [];
 
   // merge several of the byteefficiency audits in a general 'wasted' hashmap
   var wasted = {};
@@ -122,7 +127,7 @@ app.get('/gamestate.json', async(request, response) => {
   if (resources4.length > 0) levels.push(level4);
   // fix the naming, in case we omitted empty levels
   for (i = 0; i < levels.length; i++) {
-    levels[i].name = 'Level ' + (i+1) + '\n' + levels[i].name;
+    levels[i].name = 'Level ' + (i + 1) + '\n' + levels[i].name;
   }
   // finalize gamestate
   var gameplay = {

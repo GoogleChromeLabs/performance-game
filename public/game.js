@@ -53,7 +53,7 @@ var hintInterval;
 var gamestate = {};
 var levels = [];
 var currentLevel;
-var currentTime = -1;  // the current time in game with respect to resource loading in lighthouse
+var currentTime = -1; // the current time in game with respect to resource loading in lighthouse
 
 var ship;
 var cursors;
@@ -62,7 +62,7 @@ var screenshot;
 var bullet;
 var bullets;
 var bulletTime = 0;
-var meteors;
+var asteroids;
 
 var hearts = [];
 var heartWidth = 35;
@@ -114,10 +114,10 @@ function create() {
   //  A spacey background
   // game.add.tileSprite(0, 0, game.width, game.height, 'space');
 
-  // the meteors
-  meteors = game.add.group();
-  meteors.enableBody = true;
-  meteors.physicsBodyType = Phaser.Physics.ARCADE;
+  // the asteroids
+  asteroids = game.add.group();
+  asteroids.enableBody = true;
+  asteroids.physicsBodyType = Phaser.Physics.ARCADE;
 
   //  Our ships bullets
   bullets = game.add.group();
@@ -162,7 +162,7 @@ function create() {
   cursors = game.input.keyboard.createCursorKeys();
   game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR, Phaser.Keyboard.ENTER ]);
 
-  // emitter  for particles when a meteor is destroyed
+  // emitter  for particles when a asteroid is destroyed
   emitter = game.add.emitter(0, 0, 100);
   emitter.makeParticles('particle');
 
@@ -201,6 +201,8 @@ function create() {
 
 function update() {
 
+  if(!currentLevel) return;
+
   if (cursors.up.isDown) {
     game.physics.arcade.accelerationFromRotation(ship.rotation, 200, ship.body.acceleration);
   } else {
@@ -221,17 +223,17 @@ function update() {
 
   // update the game time - we consider the minimum end time of asteroids in the gamefield as current time
   currentTime = Number.MAX_VALUE;
-  if(currentLevel.resources.length > 0) currentTime = currentLevel.resources[0].endTime;
-  for (var i = 0; i < meteors.children.length; i++) {
-    var asteroid = meteors.children[i];
+  if (currentLevel.resources.length > 0) currentTime = currentLevel.resources[0].endTime;
+  for (var i = 0; i < asteroids.children.length; i++) {
+    var asteroid = asteroids.children[i];
     currentTime = Math.min(currentTime, asteroid.endTime);
   }
-  if(!currentTime) currentTime = Number.MAX_VALUE;
+  if (!currentTime) currentTime = Number.MAX_VALUE;
 
 
   // update the screenshot if needed
   var last = null;
-  for (var i = 0; i < gamestate.lhr_screenshots.length; i++) {
+  for (i = 0; i < gamestate.lhr_screenshots.length; i++) {
     var shot = gamestate.lhr_screenshots[i];
     if (shot.timing < currentTime) last = shot;
   }
@@ -244,18 +246,18 @@ function update() {
   }
 
 
-  generateMeteorites();
+  generateAsteroids();
 
   screenWrap(ship);
 
   bullets.forEachExists(screenWrap, this);
-  meteors.forEachExists(screenWrap, this);
+  asteroids.forEachExists(screenWrap, this);
 
-  game.physics.arcade.overlap(bullets, meteors, meteorHit, null, this);
-  game.physics.arcade.overlap(ship, meteors, shipHit, null, this);
+  game.physics.arcade.overlap(bullets, asteroids, asteroidHit, null, this);
+  game.physics.arcade.overlap(ship, asteroids, shipHit, null, this);
 
   // next level reached?
-  if (meteors.length === 0 && currentLevel.resources.length === 0 && levels.length > 0) {
+  if (asteroids.length === 0 && currentLevel.resources.length === 0 && levels.length > 0) {
     while (currentLevel.resources.length === 0 && levels.length > 0) {
       currentLevel = levels.shift();
     }
@@ -265,7 +267,7 @@ function update() {
     } else {
       openPopup(currentLevel.name);
     }
-  } else if (levels.length === 0 && currentLevel.resources.length === 0 && meteors.length === 0 && ship.health > 0) {
+  } else if (levels.length === 0 && currentLevel.resources.length === 0 && asteroids.length === 0 && ship.health > 0) {
     // was the game won?
     endGame(true);
   }
@@ -275,8 +277,8 @@ function update() {
     labels[i].alpha -= 0.003;
     labels[i].y -= 2;
     if (labels[i].alpha <= 0) {
-      labels[i].meteor.floatLabel = null;
-      labels[i].meteor = null;
+      labels[i].asteroid.floatLabel = null;
+      labels[i].asteroid = null;
       labels[i].destroy();
       labels.splice(i, 1);
     }
@@ -288,26 +290,26 @@ function update() {
 }
 
 //  Called if the bullet hits one of the veg sprites
-function meteorHit(bullet, meteor) {
-  meteor.health -= 20; // every bullet represents 20kb download right now
+function asteroidHit(bullet, asteroid) {
+  asteroid.health -= 20; // every bullet represents 20kb download right now
   bullet.kill();
-  if (!meteor.floatLabel) {
-    var text = meteor.label;
+  if (!asteroid.floatLabel) {
+    var text = asteroid.label;
     var style = { font: '19px Arial', fill: '#ff0044', align: 'center' };
-    var t = game.add.text(meteor.x, meteor.y, text, style);
+    var t = game.add.text(asteroid.x, asteroid.y, text, style);
     labels.push(t);
-    t.meteor = meteor;
-    meteor.floatLabel = t;
+    t.asteroid = asteroid;
+    asteroid.floatLabel = t;
   }
 
   // and an explosion with aprticles!
-  emitter.x = meteor.x;
-  emitter.y = meteor.y;
+  emitter.x = asteroid.x;
+  emitter.y = asteroid.y;
   emitter.start(true, 1000, null, 20);
 
-  if (meteor.health <= 0) {
-    meteors.remove(meteor, true);
-    score += parseInt(meteor.size, 10);
+  if (asteroid.health <= 0) {
+    asteroids.remove(asteroid, true);
+    score += parseInt(asteroid.size, 10);
   }
 
 }
@@ -347,7 +349,7 @@ function render() {
 }
 
 
-function generateMeteorites() {
+function generateAsteroids() {
   if (!currentLevel || !currentLevel.resources) return;
   for (var i = currentLevel.resources.length - 1; i >= 0; i--) {
     var item = currentLevel.resources[i];
@@ -361,11 +363,11 @@ function generateMeteorites() {
       if (item.coverage && item.coverage > 75) asset_name = 'meteroid_green';
       else if (item.coverage && item.coverage > 50) asset_name = 'meteroid_red';
       else if (item.coverage && item.coverage > 0) asset_name = 'meteroid_orange';
-      // psoition new meteors on random point outside game
-      if (rnd < 0.25) c = meteors.create(0, game.world.randomY, asset_name);
-      else if (rnd < 0.5) c = meteors.create(game.width, game.world.randomY, asset_name);
-      else if (rnd < 0.75) c = meteors.create(game.world.randomX, 0, asset_name);
-      else c = meteors.create(game.world.randomX, game.height, asset_name);
+      // psoition new asteroids on random point outside game
+      if (rnd < 0.25) c = asteroids.create(0, game.world.randomY, asset_name);
+      else if (rnd < 0.5) c = asteroids.create(game.width, game.world.randomY, asset_name);
+      else if (rnd < 0.75) c = asteroids.create(game.world.randomX, 0, asset_name);
+      else c = asteroids.create(game.world.randomX, game.height, asset_name);
       c.width = size;
       c.height = size;
       c.anchor.set(0.5);
@@ -379,15 +381,15 @@ function generateMeteorites() {
       game.physics.enable(c, Phaser.Physics.ARCADE);
       c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * 60 + 40, 10));
       currentLevel.resources.splice(i, 1);
-      console.log('Adding meteorit for resource: ' + item);
+      console.log('Adding asteroid for resource: ' + item);
     }
   }
 }
 
 
-function shipHit(ship, meteor) {
+function shipHit(ship, asteroid) {
   if (invincible) return; // after a hit make the ship indestructible for some secs to recover
-  meteors.remove(meteor, true);
+  asteroids.remove(asteroid, true);
   ship.health--;
   if (ship.health === 0) {
     endGame(false);
