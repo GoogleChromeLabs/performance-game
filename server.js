@@ -68,12 +68,12 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_fcp = lhr.audits['first-contentful-paint'].rawValue;
   var lhr_psi = lhr.audits['speed-index'].rawValue;
   var lhr_interactive = lhr.audits['interactive'].rawValue;
-  var lhr_screenshots = lhr.audits['screenshot-thumbnails'].details.items;
+  var lhr_screenshots = lhr.audits['screenshot-thumbnails'] && lhr.audits['screenshot-thumbnails'].details ? lhr.audits['screenshot-thumbnails'].details.items : [];
   var lhr_network = lhr.audits['network-requests'].details.items;
   var lhr_unused_css = lhr.audits['unused-css-rules'].details.items;
   var lhr_optimized_images = lhr.audits['uses-optimized-images'].details.items;
   var lhr_responsive_images = lhr.audits['uses-responsive-images'].details.items;
-  var lhr_offscreen_images = lhr.audits['offscreen-images'].details.items;
+  var lhr_offscreen_images = lhr.audits['offscreen-images'] && lhr.audits['offscreen-images'].details ? lhr.audits['offscreen-images'].details.items : [];
   var lhr_uses_webp = lhr.audits['uses-webp-images'].details.items;
   var lhr_perf_score = lhr.categories.performance.score;
   var lhr_pwa_score = lhr.categories.pwa.score;
@@ -129,12 +129,24 @@ app.get('/gamestate.json', async(request, response) => {
   for (i = 0; i < levels.length; i++) {
     levels[i].name = 'Level ' + (i + 1) + '\n' + levels[i].name;
   }
+
+  // create some goodies
+  var goodies = [];
+  var gameDuration = lhr_network[lhr_network.length-1].startTime;
+  addGoodie(goodies, lhr_has_sw, "ServiceWorker registered", "extra-life", gameDuration);
+  addGoodie(goodies, lhr_has_a2hs, "Add-To-Homescreen", "extra-life", gameDuration);
+  addGoodie(goodies, lhr_has_http2, "HTTP2 enabled", "extra-life", gameDuration);
+  addGoodie(goodies, lhr_has_https, "Page is secure", "extra-life", gameDuration);
+  addGoodie(goodies, lhr_has_offline, "Offline Mode", "extra-life", gameDuration);
+
+
   // finalize gamestate
   var gameplay = {
     lhr_perf_score: lhr_perf_score,
     lhr_pwa_score: lhr_pwa_score,
     lhr_screenshots: lhr_screenshots,
     levels: levels,
+    goodies: goodies
   };
 
   // console.log(JSON.stringify(gameplay, null, 4));
@@ -143,6 +155,17 @@ app.get('/gamestate.json', async(request, response) => {
   response.contentType('application/json');
   response.end(JSON.stringify(gameplay));
 });
+
+function addGoodie(goodies, flag, name, goodieToGive, gameDuration) {
+  if (flag) {
+    var randomTime =parseInt(Math.random() * gameDuration);
+    goodies.push({
+      name: name, // name of the goodie, will be displayed on client side
+      goodie: goodieToGive, // goodie name, will be resolved to the goodie on client side
+      time: randomTime //time to hand out the goodie in the game - random between start and end
+    });
+  }
+}
 
 function addToWasted(auditItems, wastedList, auditName) {
   for (var i = 0; i < auditItems.length; i++) {
