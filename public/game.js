@@ -31,12 +31,13 @@ function preload() {
   game.load.image('heart', 'img/heart.png');
   game.load.image('particle', 'img/bullets.png');
   game.load.image('popupBg', 'img/popup.png');
+  game.load.image('background', 'img/background.png');
   game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
 }
 
 var hints = [
   'Every asteroid\nrepresents one\nloaded resource.',
-  'Every shot\nrepresents a\n20kb download.',
+  'Every shot\nrepresents a\n10kb download.',
   "Unsed CSS/JS\nasteroids can't\nbe destroyed",
   'A red asteroid\nmeans more than\n75% of the resource\nis unused',
   'A green asteroid\nmeans more than\n75% of the resource\nis used',
@@ -63,6 +64,7 @@ var bullet;
 var bullets;
 var bulletTime = 0;
 var asteroids;
+var goodies; // the goodies for the ship to catch
 
 var hearts = [];
 var heartWidth = 35;
@@ -91,7 +93,7 @@ function getGamestateAndStart() {
     throw new Error('Network response was not ok.');
   }).then(function(myJSON) {
     console.log('Startin game with gamestate:');
-    console.log(myJSON); // log a copy, as we'll change the original
+    console.log(JSON.parse(JSON.stringify(myJSON))); // log a copy, as we'll change the original
     gamestate = myJSON;
     levels = JSON.parse(JSON.stringify(gamestate.levels)); // we'll manipulate that later on, so we'll use a copy
     currentLevel = levels.shift();
@@ -112,7 +114,7 @@ function create() {
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
   //  A spacey background
-  // game.add.tileSprite(0, 0, game.width, game.height, 'space');
+  game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
   // the asteroids
   asteroids = game.add.group();
@@ -124,6 +126,11 @@ function create() {
   bullets.enableBody = true;
   bullets.physicsBodyType = Phaser.Physics.ARCADE;
 
+  //  The goodies
+  goodies = game.add.group();
+  goodies.enableBody = true;
+  goodies.physicsBodyType = Phaser.Physics.ARCADE;
+
   //  All 40 of them
   bullets.createMultiple(40, 'bullet');
   bullets.setAll('anchor.x', 0.5);
@@ -134,7 +141,7 @@ function create() {
   ship.anchor.set(0.5);
   ship.height = 30;
   ship.width = 30;
-  ship.health = 3;
+  ship.health = 3; // 3 lives
 
   // Screenshot of the loading progress
   screenshot = game.add.sprite(0, 0, 'screenshot');
@@ -142,13 +149,14 @@ function create() {
   screenshot.width = 240;
   screenshot.visible = false;
 
-  // display lives
-  for (var i = 0; i < ship.health; i++) {
+  // display lives - let's generate 10 to haev buffer for goodies, but only show the ones left
+  for (var i = 0; i < 10; i++) {
     var top = 5;
     var left = game.width - 40 - i * (heartWidth + 20);
     var heart = game.add.sprite(left, top, 'heart');
     heart.width = heartWidth;
     heart.height = heartHeight;
+    heart.visible = false;
     hearts.push(heart);
   }
 
@@ -245,6 +253,28 @@ function update() {
     loader.start();
   }
 
+  // update life displayed
+  for (var i = 0; i < hearts.length; i++) {
+    var show = i < ship.health;
+    hearts[i].visible = show;
+  }
+
+  // check if we need to create a goodie
+  for (i = gamestate.goodies.length-1; i>=0; i--) {
+    var goodie = gamestate.goodies[i];
+    if (goodie.time < currentTime) {
+      gamestate.goodies.splice(i, 1);
+      var point = createRandomPointOutsideGame();
+      var goodieSprite = goodies.create(point.x, point.y, 'heart');
+      goodieSprite.width = heartWidth;
+      goodieSprite.height = heartHeight;
+      goodieSprite.anchor.set(0.5);
+      goodieSprite.goodie = goodie;
+      game.physics.enable(goodieSprite, Phaser.Physics.ARCADE);
+      game.physics.arcade.moveToXY(goodieSprite, game.world.randomX, game.world.randomY, parseInt(Math.random() * 60 + 40, 10));
+    }
+  }
+
 
   generateAsteroids();
 
@@ -252,9 +282,11 @@ function update() {
 
   bullets.forEachExists(screenWrap, this);
   asteroids.forEachExists(screenWrap, this);
+  goodies.forEachExists(screenWrap, this);
 
   game.physics.arcade.overlap(bullets, asteroids, asteroidHit, null, this);
   game.physics.arcade.overlap(ship, asteroids, shipHit, null, this);
+  game.physics.arcade.overlap(ship, goodies, shipHitGoodie, null, this);
 
   // next level reached?
   if (asteroids.length === 0 && currentLevel.resources.length === 0 && levels.length > 0) {
@@ -277,8 +309,8 @@ function update() {
     labels[i].alpha -= 0.003;
     labels[i].y -= 2;
     if (labels[i].alpha <= 0) {
-      labels[i].asteroid.floatLabel = null;
-      labels[i].asteroid = null;
+      labels[i].sourceSprite.floatLabel = null;
+      labels[i].sourceSprite = null;
       labels[i].destroy();
       labels.splice(i, 1);
     }
@@ -291,15 +323,10 @@ function update() {
 
 //  Called if the bullet hits one of the veg sprites
 function asteroidHit(bullet, asteroid) {
-  asteroid.health -= 20; // every bullet represents 20kb download right now
+  asteroid.health -= 10; // every bullet represents 10kb download right now
   bullet.kill();
-  if (!asteroid.floatLabel) {
-    var text = asteroid.label;
-    var style = { font: '19px Arial', fill: '#ff0044', align: 'center' };
-    var t = game.add.text(asteroid.x, asteroid.y, text, style);
-    labels.push(t);
-    t.asteroid = asteroid;
-    asteroid.floatLabel = t;
+  if (!asteroid.floatLabel || asteroid.floatLabel.alpha<0.5) {
+    createFloatingLabel(asteroid.label, asteroid.x, asteroid.y, asteroid);
   }
 
   // and an explosion with aprticles!
@@ -312,6 +339,14 @@ function asteroidHit(bullet, asteroid) {
     score += parseInt(asteroid.size, 10);
   }
 
+}
+
+function createFloatingLabel(text, x, y, sourceSprite) {
+  var style = { font: '19px Arial', fill: '#ff0044', align: 'center' };
+  var t = game.add.text(x, y, text, style);
+  labels.push(t);
+  t.sourceSprite = sourceSprite;
+  sourceSprite.floatLabel = t;
 }
 
 function fireBullet() {
@@ -364,10 +399,8 @@ function generateAsteroids() {
       else if (item.coverage && item.coverage > 50) asset_name = 'meteroid_red';
       else if (item.coverage && item.coverage > 0) asset_name = 'meteroid_orange';
       // psoition new asteroids on random point outside game
-      if (rnd < 0.25) c = asteroids.create(0, game.world.randomY, asset_name);
-      else if (rnd < 0.5) c = asteroids.create(game.width, game.world.randomY, asset_name);
-      else if (rnd < 0.75) c = asteroids.create(game.world.randomX, 0, asset_name);
-      else c = asteroids.create(game.world.randomX, game.height, asset_name);
+      var point = createRandomPointOutsideGame();
+      c = asteroids.create(point.x, point.y, asset_name);
       c.width = size;
       c.height = size;
       c.anchor.set(0.5);
@@ -386,6 +419,22 @@ function generateAsteroids() {
   }
 }
 
+function createRandomPointOutsideGame() {
+  var rnd = Math.random();
+  var point = {x: 0, y: 0};
+  if (rnd < 0.25) point = {x: 0, y: game.world.randomY};
+  else if (rnd < 0.5) point = {x: game.width, y: game.world.randomY};
+  else if (rnd < 0.75) point = {x: game.world.randomX, y: 0};
+  else point = {x: game.world.randomX, y: game.height};
+  return point;
+}
+
+function shipHitGoodie(ship, goodieSprite) {
+  var goodie = goodieSprite.goodie;
+  goodies.remove(goodieSprite);
+  ship.health++;
+  createFloatingLabel(goodie.name, goodieSprite.x, goodieSprite.y, goodieSprite);
+}
 
 function shipHit(ship, asteroid) {
   if (invincible) return; // after a hit make the ship indestructible for some secs to recover
@@ -397,8 +446,6 @@ function shipHit(ship, asteroid) {
   invincible = true;
   ship.alpha = 0.5;
   setTimeout(function() { invincible = false; ship.alpha = 1; }, 3000);
-  var heart = hearts.pop();
-  heart.destroy();
 }
 
 
