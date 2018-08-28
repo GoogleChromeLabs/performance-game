@@ -34,7 +34,7 @@ There are many excellent tools, metrics and docs regarding page speed, but these
   ```
 4. Run the game via node
   ```none
-  $ node run start
+  $ npm run start
   ```
 5. Do your changes, test, repeat
 6. Lint the code via
