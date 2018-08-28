@@ -36,7 +36,7 @@ Of course you can! Contributions are always welcome. Please take a look at [CONT
   ```
 4. Run the game via node
   ```none
-  $ node run start
+  $ npm run start
   ```
 5. Do your changes, test, repeat
 6. Lint the code via
