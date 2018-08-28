@@ -21,7 +21,9 @@ There are many excellent tools, metrics and docs regarding page speed, but these
 * Several levels mapping to site load key points (first paint, first meaningful paint, TTI, fully loaded)
 * Destroying the last asteroid ends the game, and brings you to the the highscores for the URL you played, which you can then easily share via web-share API
 
+# Can I contribute?
 
+Of course you can! Contributions are always welcome. Please take a look at [CONTRIBUTING](./CONTRIBUTING.md).
 
 
 # Installation/Contributing
