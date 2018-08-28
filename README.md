@@ -51,4 +51,12 @@ Of course you can! Contributions are always welcome. Please take a look at [CONT
   ```
 8. Create PR from this via UI (see [here](https://help.github.com/articles/creating-a-pull-request-from-a-fork/))
 
+9. Deploy
+* [Install](https://cloud.google.com/sdk/install) and [set up](https://cloud.google.com/sdk/docs/initializing) Google Cloud SDK as described here
+* Then run the deploy script
+  ```none
+  $ npm run deploy
+  ```
+* See also [notes here](https://cloud.google.com/appengine/docs/standard/nodejs/using-headless-chrome-with-puppeteer)
+
 
