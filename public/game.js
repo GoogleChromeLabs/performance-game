@@ -163,7 +163,7 @@ function create() {
   //  and its physics settings
   game.physics.enable(ship, Phaser.Physics.ARCADE);
 
-  ship.body.drag.set(100);
+  ship.body.drag.set(0);
   ship.body.maxVelocity.set(200);
 
   //  Game input
