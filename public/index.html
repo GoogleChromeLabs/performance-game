@@ -17,78 +17,113 @@ limitations under the License.
 <html>
 <head>
     <meta charset="utf-8" />
+    <title>The Performance Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gamedev Canvas Workshop</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+    	body { padding: 0; margin: 0; }
+    	canvas {
+        background: #eee;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+      }
+      input + span {
+        padding-right: 30px;
+      }
+
+      input:invalid+span:after {
+        position: absolute; content: '✖';
+        padding-left: 5px;
+      }
+
+      input:valid+span:after {
+        position: absolute;
+        content: '✓';
+        padding-left: 5px;
+      }
+
+     #urlInputDialog {
+       background-color: #bd6a1d;
+       border-radius: 25px;
+       border: 6px solid #833f00;
+       padding: 20px;
+       max-width: 80%;
+       width: 400px;
+     }
+
+     #infoPopup {
+       background-color: #bd6a1d;
+       border-radius: 25px;
+       border: 6px solid #833f00;
+       padding: 20px;
+       text-align: center;
+       line-height:120%;
+       max-width: 80%;
+       width: 400px;
+     }
+
+     .dialogButton {
+       background-color: #833f00;
+       border-radius: 25px;
+     }
+
+    </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
     <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script src="//cdn.jsdelivr.net/phaser/2.5.0/phaser.min.js"></script>
+    <script src="game.js"></script>
     <script>
-      function tryStartGame() {
-        var url = document.getElementById("url").value;
-        url = encodeURIComponent(url);
-        document.location.href = "game.html?urlToPlay=" + url;
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+      });
+
+      if ('serviceWorker' in navigator) {
+         window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js');
+         });
       }
 
     </script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-123358764-1"></script>
-    <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-123358764-1'); </script>
-
-    <style>
-    body {
-      background-color: black;
-    }
-
-    #main_diff {
-      background-image: url('img/popup.png');
-      background-repeat: no-repeat;
-      background-size: 100% 100%;
-      padding: 20px;
-      margin: 20px;
-      max-width: 400px;
-    }
-
-    input + span {
-      padding-right: 30px;
-    }
-
-    input:invalid+span:after {
-      position: absolute; content: '✖';
-      padding-left: 5px;
-    }
-
-    input:valid+span:after {
-      position: absolute;
-      content: '✓';
-      padding-left: 5px;
-    }
-    </style>
-
 </head>
 <body>
-  <center>
-    <div id="main_diff">
 
-    <h2>The performance game!</h2>
-    Play through the loading process of any website, fight wasted resources and anti-patterns!
-    Will you be faster than your site?
+<canvas id="myCanvas" width="480" height="320"></canvas>
 
+<dialog class="mdl-dialog" id="urlInputDialog">
+    <h4 class="mdl-dialog__title">The performance game!</h4>
+    <div class="mdl-dialog__content">
+      <p>
+        Play through the loading process of any website, fight wasted resources and anti-patterns!
+        Will you be faster than your site?
+      </p>
+    </div>
     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:80%;max-width:500px;">
-      <input class="mdl-textfield__input" type="url" 
+      <input class="mdl-textfield__input" type="url"
              required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
              title="Please enter a valid URL"
              id="url">
       <span class="validity"></span>
       <label class="mdl-textfield__label" for="sample3">URL to play</label>
      </div>
+    <div class="mdl-dialog__actions">
+      <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="document.getElementById('urlInputDialog').close();getGamestateAndStart();">Play</button>
+    </div>
+  </dialog>
 
-    <br/>
 
-    <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" onclick="tryStartGame();">
-      Start Game
-    </button>
+  <dialog class="mdl-dialog" id="infoPopup">
+    <h4 class="mdl-dialog__title" id="infoPopupTitle"></h4>
+      <div class="mdl-dialog__content">
+        <p id="infoPopupContent">
+        </p>
+      </div>
+    </dialog>
 
-  </div>
-
-  </center>
 </body>
 </html>
