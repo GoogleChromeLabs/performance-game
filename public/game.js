@@ -74,17 +74,22 @@ var invincible = false;
 
 var labels = [];
 
-var popupLabel;
 var score = 0;
 var scoreLabel;
 
-var popup;
 var gameOver = false;
 var emitter;
 
 function getGamestateAndStart() {
+  //show loading popup
+  showInfoPopup('Loading Game...');
+  hintInterval = setInterval(function() {
+    if (showLoadingText) showInfoPopup('Loading Game...');
+    else showInfoPopup(hints[parseInt(Math.random() * hints.length, 10)]);
+    showLoadingText = !showLoadingText;
+  }, 4000);
   // get gamestate from server to start game
-  urlToPlay = getUrlParam('urlToPlay');
+  urlToPlay = document.getElementById('url').value;
   fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origin'}).then(function(response) {
     if (response.ok) {
       console.log('success');
@@ -98,7 +103,7 @@ function getGamestateAndStart() {
     levels = JSON.parse(JSON.stringify(gamestate.levels)); // we'll manipulate that later on, so we'll use a copy
     currentLevel = levels.shift();
     clearInterval(hintInterval);
-    openPopup(currentLevel.name);
+    showInfoPopup(currentLevel.name, "");
   }).catch(function(error) {
     console.log('There has been a problem with your fetch operation: ', error.message);
   });
@@ -179,32 +184,16 @@ function create() {
   scoreLabel = game.add.text(game.world.centerX, 25, '0', style);
   scoreLabel.anchor.set(0.5);
 
-  //  create popup for later use
-  popup = game.add.sprite(game.world.centerX, game.world.centerY, 'popupBg');
-  popup.anchor.set(0.5);
-  popup.inputEnabled = true;
-
-  style = { font: '35px Arial', fill: '#ffffff', boundsAlignH: 'center', boundsAlignV: 'middle'};
-  popupLabel = game.add.text(0, 0, 'Game is loading...', style);
-  popupLabel.setTextBounds(0, 0, game.width, game.height);
-  popupLabel.visible = false;
 
   var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
   keyEnter.onDown.add(function() {
     if (gameOver)document.location.href = '/endscreen.html?url=' + urlToPlay + '&score=' + score + '&lhr_perf_score=' + gamestate.lhr_perf_score;
-    else closePopup();
+    else closeInfoPopup();
   }, this);
 
   game.paused = true;
 
-  openPopup('Loading Game');
-  hintInterval = setInterval(function() {
-    if (showLoadingText) openPopup('Loading Game');
-    else openPopup(hints[parseInt(Math.random() * hints.length, 10)]);
-    showLoadingText = !showLoadingText;
-  }, 4000);
-
-  getGamestateAndStart();
+  document.getElementById('urlInputDialog').showModal();
 }
 
 function update() {
@@ -297,7 +286,7 @@ function update() {
     if (currentLevel.resources.length === 0) {
       endGame(true);
     } else {
-      openPopup(currentLevel.name);
+      showInfoPopup(currentLevel.name);
     }
   } else if (levels.length === 0 && currentLevel.resources.length === 0 && asteroids.length === 0 && ship.health > 0) {
     // was the game won?
@@ -456,23 +445,22 @@ function getUrlParam(key) {
 
 function endGame(won) {
   gameOver = true;
-  if (won) openPopup('You won!');
-  else openPopup('Sorry, you lost!');
+  if (won) showInfoPopup('You won!');
+  else showInfoPopup('Sorry, you lost!');
 }
 
 // ------------------ popup handling -----------------------
 
-
-function openPopup(msg) {
-  popupLabel.text = msg;
-  popup.visible = true;
-  popupLabel.visible = true;
+function showInfoPopup(title, text='') {
+  if(!text) text = '';
+  document.getElementById("infoPopupTitle").innerText = title;
+  document.getElementById("infoPopupContent").innerText = text;
+  var popup = document.getElementById("infoPopup");
+  if(!popup.open) popup.showModal();
   game.paused = true;
 }
 
-function closePopup() {
+function closeInfoPopup() {
+  document.getElementById("infoPopup").close();
   game.paused = false;
-  popupLabel.visible = false;
-  popup.visible = false;
-  popupLabel.text = ''; // set text to empty, otherwise it might vi visible for a split second on next open
 }
