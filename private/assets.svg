@@ -15,7 +15,7 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 5c3e80d, 2017-08-06"
-   sodipodi:docname="asteroids.svg">
+   sodipodi:docname="assets.svg">
   <defs
      id="defs2">
     <filter
@@ -214,13 +214,13 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="-121.38551"
-     inkscape:cy="735.64092"
+     inkscape:cx="315.89852"
+     inkscape:cy="757.65808"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1440"
-     inkscape:window-height="856"
+     inkscape:window-width="1430"
+     inkscape:window-height="763"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
@@ -515,5 +515,28 @@
        cx="-34.653534"
        id="ellipse900"
        style="fill:#a25b14;fill-opacity:1;stroke:none;stroke-width:1.36500001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-  </g>
+    <path
+       style="fill:#1dbd3f;fill-opacity:1;stroke:#00831e;stroke-width:2.57116914;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m -59.040446,119.27046 a 21.217866,28.700908 0 0 0 -21.184714,27.4453 c -6.8171,0.6773 -12.082167,5.7433 -12.082167,11.93475 v 24.36227 c 0,6.65594 6.083762,12.01459 13.640354,12.01459 h 39.7835 c 7.556593,0 13.639836,-5.35865 13.639836,-12.01459 v -24.36227 c 0,-6.3555 -5.54758,-11.52408 -12.627117,-11.97809 a 21.217866,28.700908 0 0 0 -21.169692,-27.40196 z m -0.379187,5.69474 a 14.752468,22.672373 0 0 1 14.729737,21.67117 h -29.449113 a 14.752468,22.672373 0 0 1 14.719376,-21.67117 z"
+       id="rect879"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/shield_powerup.png"
+       inkscape:export-xdpi="66.370399"
+       inkscape:export-ydpi="66.370399" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot908"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(0.26458333,0,0,0.26458333,-1.1339286,-4.1577382)"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/shield_powerup.png"
+       inkscape:export-xdpi="66.370399"
+       inkscape:export-ydpi="66.370399"><flowRegion
+         id="flowRegion910"><rect
+           id="rect912"
+           width="191.42857"
+           height="114.28571"
+           x="-314.28571"
+           y="613.94824" /></flowRegion><flowPara
+         id="flowPara914"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:85.33333588px;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle;fill:#f4f4f4;fill-opacity:1">SSL</flowPara></flowRoot>  </g>
 </svg>

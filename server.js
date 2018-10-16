@@ -131,7 +131,7 @@ app.get('/gamestate.json', async(request, response) => {
   addGoodie(goodies, lhr_has_sw, "ServiceWorker registered", "extra-life", gameDuration);
   addGoodie(goodies, lhr_has_a2hs, "Add-To-Homescreen", "extra-life", gameDuration);
   addGoodie(goodies, lhr_has_http2, "HTTP2 enabled", "extra-life", gameDuration);
-  addGoodie(goodies, lhr_has_https, "Page is secure", "extra-life", gameDuration);
+  addGoodie(goodies, lhr_has_https, "Page is secure", "shield", gameDuration);
   addGoodie(goodies, lhr_has_offline, "Offline Mode", "extra-life", gameDuration);
 
 
@@ -166,10 +166,10 @@ function calcLevelStatistics(level){
 
 function addGoodie(goodies, flag, name, goodieToGive, gameDuration) {
   if (flag) {
-    var randomTime =parseInt(Math.random() * gameDuration);
+    var randomTime = parseInt(Math.random() * gameDuration);
     goodies.push({
       name: name, // name of the goodie, will be displayed on client side
-      goodie: goodieToGive, // goodie name, will be resolved to the goodie on client side
+      type: goodieToGive, // goodie name, will be resolved to the goodie on client side
       time: randomTime //time to hand out the goodie in the game - random between start and end
     });
   }
