@@ -28,16 +28,6 @@ const app = express();
 // setting up routes for the various files
 app.use(express.static('public'));
 
-/* app.get('/',function(req,res){
-     res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/game.html',function(req,res){
-     res.sendFile(path.join(__dirname, 'game.html'));
-});
-app.get('/endscreen.html',function(req,res){
-     res.sendFile(path.join(__dirname, 'endscreen.html'));
-});*/
-
 
 // this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
 // All this will be used to create a level to play through
@@ -104,30 +94,35 @@ app.get('/gamestate.json', async(request, response) => {
   var resources4 = [];
   for (var i = 0; i < lhr_network.length; i++) {
     var res = lhr_network[i];
+    // let's skip the really small ones (analytics pings etc.)
+    // they'll just distract from the real problems
+    if(res.transferSize<700) continue; // smaller than 700 byte
     var name = res.url.split('/').pop().replace(/[^a-zA-Z._ ]{3,}/g, '*'); // get just filename, and replace everything unreadable with * (fingerprints, hashes etc.)
     if (name.includes('?')) name = name.substring(0, name.indexOf('?')); // also strip off url params
     if (!name) name = res.url.substring(res.url.indexOf('//') + 2); // let's use host if path is empty
     res.label = name;
     res.coverage = 100;
     if (wasted[res.url]) res.coverage = wasted[res.url].coverage;
+    if (wasted[res.url]) res.wastedSize = wasted[res.url].wastedSize;
     if (res.endTime < lhr_fcp) resources1.push(res);
     else if (res.endTime < lhr_psi) resources2.push(res);
     else if (res.endTime < lhr_interactive) resources3.push(res);
     else resources4.push(res);
   }
   var levels = [];
-  var level1 = {name: 'First Contentful Paint\nHit ENTER to start', resources: resources1};
-  var level2 = {name: 'Speed Index\nHit ENTER to start', resources: resources2};
-  var level3 = {name: 'Interactive\nHit ENTER to start', resources: resources3};
-  var level4 = {name: 'Full Load\nHit ENTER to start', resources: resources4};
+  var level1 = {name: 'First Contentful Paint', resources: resources1};
+  var level2 = {name: 'Speed Index', resources: resources2};
+  var level3 = {name: 'Interactive', resources: resources3};
+  var level4 = {name: 'Full Load', resources: resources4};
   // only add levels with resources in them
   if (resources1.length > 0) levels.push(level1);
   if (resources2.length > 0) levels.push(level2);
   if (resources3.length > 0) levels.push(level3);
   if (resources4.length > 0) levels.push(level4);
-  // fix the naming, in case we omitted empty levels
+  // fix the numbering, and add in statsitics
   for (i = 0; i < levels.length; i++) {
-    levels[i].name = 'Level ' + (i + 1) + '\n' + levels[i].name;
+    levels[i].levelNumber = (i + 1);
+    calcLevelStatistics(levels[i]);
   }
 
   // create some goodies
@@ -156,6 +151,19 @@ app.get('/gamestate.json', async(request, response) => {
   response.end(JSON.stringify(gameplay));
 });
 
+function calcLevelStatistics(level){
+  var size = 0;
+  var wasted = 0;
+  for(var i = 0; i < level.resources.length; i++) {
+    var res = level.resources[i];
+    size += res.transferSize ? res.transferSize : 0;
+    wasted += res.wastedSize ? res.wastedSize : 0;
+  }
+  level.totalSize = size;
+  level.wastedSize = wasted;
+  level.resourcesCount = level.resources.length;
+}
+
 function addGoodie(goodies, flag, name, goodieToGive, gameDuration) {
   if (flag) {
     var randomTime =parseInt(Math.random() * gameDuration);
@@ -181,6 +189,7 @@ function addToWasted(auditItems, wastedList, auditName) {
     if (oldCoverage !== -1 && newCoverage > oldCoverage) continue;
     wastedList[item.url].coverage = newCoverage;
     wastedList[item.url].type = auditName;
+    wastedList[item.url].wastedSize = parseInt(item.totalBytes - (newCoverage/100)*item.totalBytes); // in kb
   }
 }
 

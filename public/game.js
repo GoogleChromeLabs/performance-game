@@ -53,6 +53,7 @@ var hintInterval;
 
 var gamestate = {};
 var levels = [];
+var lastLevel;
 var currentLevel;
 var currentTime = -1; // the current time in game with respect to resource loading in lighthouse
 
@@ -80,6 +81,8 @@ var scoreLabel;
 var gameOver = false;
 var emitter;
 
+var synthesizer;
+
 function getGamestateAndStart() {
   //show loading popup
   showInfoPopup('Loading Game...');
@@ -103,7 +106,7 @@ function getGamestateAndStart() {
     levels = JSON.parse(JSON.stringify(gamestate.levels)); // we'll manipulate that later on, so we'll use a copy
     currentLevel = levels.shift();
     clearInterval(hintInterval);
-    showInfoPopup(currentLevel.name, "");
+    showInfoPopup("Level " + currentLevel.levelNumber + "<br>" + currentLevel.name, "");
   }).catch(function(error) {
     console.log('There has been a problem with your fetch operation: ', error.message);
   });
@@ -188,7 +191,10 @@ function create() {
   var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
   keyEnter.onDown.add(function() {
     if (gameOver)document.location.href = '/endscreen.html?url=' + urlToPlay + '&score=' + score + '&lhr_perf_score=' + gamestate.lhr_perf_score;
-    else closeInfoPopup();
+    else {
+      if(isDetailsPopupShowing()) closeDetailsPopup();
+      else closeInfoPopup();
+    }
   }, this);
 
   game.paused = true;
@@ -197,6 +203,20 @@ function create() {
 }
 
 function update() {
+  // lazy load synthesizer, as lib is async
+  if(!synthesizer && typeof Tone !== 'undefined') {
+    synthesizer = new Tone.Synth({
+    	oscillator : {
+      	type : 'triangle8'
+      },
+      envelope : {
+      	attack : 2,
+        decay : 1,
+        sustain: 0.4,
+        release: 4
+      }
+    }).toMaster()
+  }
 
   if(!currentLevel) return;
 
@@ -280,13 +300,17 @@ function update() {
   // next level reached?
   if (asteroids.length === 0 && currentLevel.resources.length === 0 && levels.length > 0) {
     while (currentLevel.resources.length === 0 && levels.length > 0) {
+      lastLevel = currentLevel;
       currentLevel = levels.shift();
     }
 
     if (currentLevel.resources.length === 0) {
       endGame(true);
     } else {
-      showInfoPopup(currentLevel.name);
+      var values = [["Resources loaded", lastLevel.resourcesCount],
+                    ["KB Downloaded", parseInt(lastLevel.totalSize/1024)],
+                    ["KB Wasted", parseInt(lastLevel.wastedSize/1024)]];
+      showDetailsPopup("Level " + lastLevel.levelNumber + "<br>" + lastLevel.name + " finished!", values);
     }
   } else if (levels.length === 0 && currentLevel.resources.length === 0 && asteroids.length === 0 && ship.health > 0) {
     // was the game won?
@@ -403,6 +427,19 @@ function generateAsteroids() {
       game.physics.enable(c, Phaser.Physics.ARCADE);
       c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * 60 + 40, 10));
       currentLevel.resources.splice(i, 1);
+      // playing a sound for the new asteroid
+      /*if(synthesizer) {
+          Tone.Transport.scheduleRepeat(function(time){
+              synthesizer.triggerAttackRelease('c4','8n');
+          },"2n");
+          Tone.Transport.scheduleRepeat(function(time){
+              synthesizer.triggerAttackRelease('d5','8n');
+          },"2n");
+          Tone.Transport.scheduleRepeat(function(time){
+              synthesizer.triggerAttackRelease('a2','8n');
+          },"2n");
+          Tone.Transport.start();
+      }*/
       console.log('Adding asteroid for resource: ' + item);
     }
   }
@@ -453,8 +490,8 @@ function endGame(won) {
 
 function showInfoPopup(title, text='') {
   if(!text) text = '';
-  document.getElementById("infoPopupTitle").innerText = title;
-  document.getElementById("infoPopupContent").innerText = text;
+  document.getElementById("infoPopupTitle").innerHTML = title;
+  document.getElementById("infoPopupContent").innerHTML = text;
   var popup = document.getElementById("infoPopup");
   if(!popup.open) popup.showModal();
   game.paused = true;
@@ -463,4 +500,30 @@ function showInfoPopup(title, text='') {
 function closeInfoPopup() {
   document.getElementById("infoPopup").close();
   game.paused = false;
+}
+
+function showDetailsPopup(title, values) {
+  document.getElementById("tablePopupTitle").innerHTML = title;
+  var tbl = document.getElementById("tablePopupContent");
+  tbl.innerHTML = "";
+  for(var i = 0; i < values.length; i++) {
+    var row = tbl.insertRow();
+    row.insertCell().innerText = values[i][0];
+    row.insertCell().innerText = values[i][1];
+  }
+  var popup = document.getElementById("tablePopup");
+  if(!popup.open) popup.showModal();
+  game.paused = true;
+}
+
+function closeDetailsPopup() {
+  document.getElementById("tablePopup").close();
+  game.paused = false;
+  // we show this only at level end, so when this dialog closes we open
+  // the dialog which announces the next level
+  showInfoPopup("Level " + currentLevel.levelNumber + " " + currentLevel.name);
+}
+
+function isDetailsPopupShowing() {
+  return document.getElementById("tablePopup").open;
 }
