@@ -33,6 +33,8 @@ function preload() {
   game.load.image('popupBg', 'img/popup.png');
   game.load.image('background', 'img/background.png');
   game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
+  game.load.image('shield_powerup', 'img/shield_powerup.png');
+  game.load.image('ship_shielded', 'img/ship_shielded.png');
 }
 
 var hints = [
@@ -64,14 +66,13 @@ var screenshot;
 var bullet;
 var bullets;
 var bulletTime = 0;
+var lastShotTime = Date.now();
 var asteroids;
 var goodies; // the goodies for the ship to catch
 
 var hearts = [];
 var heartWidth = 35;
 var heartHeight = 30;
-
-var invincible = false;
 
 var labels = [];
 
@@ -235,7 +236,12 @@ function update() {
   }
 
   if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-    fireBullet();
+    // we'll only allow one shot every x ms
+    if(Date.now() - lastShotTime > 300) {
+      fireBullet();
+      lastShotTime = Date.now();
+    }
+
   }
 
   // update the game time - we consider the minimum end time of asteroids in the gamefield as current time
@@ -274,7 +280,13 @@ function update() {
     if (goodie.time < currentTime) {
       gamestate.goodies.splice(i, 1);
       var point = createRandomPointOutsideGame();
-      var goodieSprite = goodies.create(point.x, point.y, 'heart');
+      var goodieSprite;
+      if(goodie.type === "extra-life") {
+          goodieSprite = goodies.create(point.x, point.y, 'heart');
+      }
+      else if(goodie.type === "shield") {
+          goodieSprite = goodies.create(point.x, point.y, 'shield_powerup');
+      }
       goodieSprite.width = heartWidth;
       goodieSprite.height = heartHeight;
       goodieSprite.anchor.set(0.5);
@@ -458,20 +470,30 @@ function createRandomPointOutsideGame() {
 function shipHitGoodie(ship, goodieSprite) {
   var goodie = goodieSprite.goodie;
   goodies.remove(goodieSprite);
-  ship.health++;
+  if(goodie.type==="extra-life") {
+    ship.health++;
+  }
+  else if(goodie.type==="shield") {
+    ship.loadTexture('ship_shielded');
+    ship.invincible = true;
+    setTimeout(function(){
+      ship.loadTexture('ship');
+      ship.invincible = false;
+    }, 10000)
+  }
   createFloatingLabel(goodie.name, goodieSprite.x, goodieSprite.y, goodieSprite);
 }
 
 function shipHit(ship, asteroid) {
-  if (invincible) return; // after a hit make the ship indestructible for some secs to recover
+  if (ship.invincible) return; // after a hit make the ship indestructible for some secs to recover
   asteroids.remove(asteroid, true);
   ship.health--;
   if (ship.health === 0) {
     endGame(false);
   }
-  invincible = true;
+  ship.invincible = true;
   ship.alpha = 0.5;
-  setTimeout(function() { invincible = false; ship.alpha = 1; }, 3000);
+  setTimeout(function() { ship.invincible = false; ship.alpha = 1; }, 3000);
 }
 
 
