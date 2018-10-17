@@ -60,7 +60,7 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_interactive = lhr.audits['interactive'].rawValue;
   var lhr_screenshots = lhr.audits['screenshot-thumbnails'] && lhr.audits['screenshot-thumbnails'].details ? lhr.audits['screenshot-thumbnails'].details.items : [];
   var lhr_network = lhr.audits['network-requests'].details.items;
-  var lhr_unused_css = lhr.audits['unused-css-rules'].details.items;
+  var lhr_unused_css = lhr.audits['unused-css-rules'] ? lhr.audits['unused-css-rules'].details.items : [];
   var lhr_optimized_images = lhr.audits['uses-optimized-images'].details.items;
   var lhr_responsive_images = lhr.audits['uses-responsive-images'].details.items;
   var lhr_offscreen_images = lhr.audits['offscreen-images'] && lhr.audits['offscreen-images'].details ? lhr.audits['offscreen-images'].details.items : [];
@@ -73,6 +73,14 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_has_https = lhr.audits['is-on-https'].rawValue;
   var lhr_has_offline = lhr.audits['works-offline'].rawValue;
   var lhr_unused_js = lhr.audits['unused-javascript'] ? lhr.audits['unused-javascript'].details.items : [];
+  var lhr_bootup_time = lhr.audits['bootup-time'] ? lhr.audits['bootup-time'].details.items : [];
+
+  // for efficiency let's move the bootup time from list into a has, indexed by url
+  var bootupHash = [];
+  for (var i = 0; i < lhr_bootup_time.length; i++) {
+    var item = lhr_bootup_time[i];
+    bootupHash[item.url] = item.total; // total scriting time
+  }
 
   // merge several of the byteefficiency audits in a general 'wasted' hashmap
   var wasted = {};
@@ -102,8 +110,9 @@ app.get('/gamestate.json', async(request, response) => {
     if (!name) name = res.url.substring(res.url.indexOf('//') + 2); // let's use host if path is empty
     res.label = name;
     res.coverage = 100;
-    if (wasted[res.url]) res.coverage = wasted[res.url].coverage;
-    if (wasted[res.url]) res.wastedSize = wasted[res.url].wastedSize;
+    res.bootupTime = bootupHash[res.url] ? bootupHash[res.url] : 0;
+    res.coverage = wasted[res.url] ? wasted[res.url].coverage : 100;
+    res.wastedSize = wasted[res.url] ? wasted[res.url].wastedSize : 0;
     if (res.endTime < lhr_fcp) resources1.push(res);
     else if (res.endTime < lhr_psi) resources2.push(res);
     else if (res.endTime < lhr_interactive) resources3.push(res);
@@ -128,11 +137,20 @@ app.get('/gamestate.json', async(request, response) => {
   // create some goodies
   var goodies = [];
   var gameDuration = lhr_network[lhr_network.length-1].startTime;
-  addGoodie(goodies, lhr_has_sw, "ServiceWorker registered", "extra-life", gameDuration);
-  addGoodie(goodies, lhr_has_a2hs, "Add-To-Homescreen", "extra-life", gameDuration);
+  var is_pwa = lhr_pwa_score > 0.7;
+  // if it's not a full PWA we'll reward the individual features at least
+  if(!is_pwa) {
+    addGoodie(goodies, lhr_has_sw, "ServiceWorker registered", "shoot-rate", gameDuration);
+    addGoodie(goodies, lhr_has_a2hs, "Add-To-Homescreen", "extra-life", gameDuration);
+    addGoodie(goodies, lhr_has_offline, "Offline Mode", "extra-life", gameDuration);
+  }
+  else {
+    addGoodie(goodies, is_pwa, "Progressive Web App", "bomb", gameDuration);
+  }
   addGoodie(goodies, lhr_has_http2, "HTTP2 enabled", "extra-life", gameDuration);
   addGoodie(goodies, lhr_has_https, "Page is secure", "shield", gameDuration);
-  addGoodie(goodies, lhr_has_offline, "Offline Mode", "extra-life", gameDuration);
+
+
 
 
   // finalize gamestate
@@ -154,14 +172,17 @@ app.get('/gamestate.json', async(request, response) => {
 function calcLevelStatistics(level){
   var size = 0;
   var wasted = 0;
+  var bootupTime = 0;
   for(var i = 0; i < level.resources.length; i++) {
     var res = level.resources[i];
     size += res.transferSize ? res.transferSize : 0;
     wasted += res.wastedSize ? res.wastedSize : 0;
+    bootupTime += res.bootupTime;
   }
   level.totalSize = size;
   level.wastedSize = wasted;
   level.resourcesCount = level.resources.length;
+  level.bootupTime = bootupTime;
 }
 
 function addGoodie(goodies, flag, name, goodieToGive, gameDuration) {

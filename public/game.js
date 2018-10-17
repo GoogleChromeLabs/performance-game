@@ -35,17 +35,21 @@ function preload() {
   game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
   game.load.image('shield_powerup', 'img/shield_powerup.png');
   game.load.image('ship_shielded', 'img/ship_shielded.png');
+  game.load.image('pwa_logo', 'img/pwa_logo.png');
+  game.load.image('sw_logo', 'img/sw_logo.png');
 }
 
 var hints = [
-  'Every asteroid\nrepresents one\nloaded resource.',
-  'Every shot\nrepresents a\n10kb download.',
-  "Unsed CSS/JS\nasteroids can't\nbe destroyed",
-  'A red asteroid\nmeans more than\n75% of the resource\nis unused',
-  'A green asteroid\nmeans more than\n75% of the resource\nis used',
-  'A deployed\nservice worker\ngives you dual\nguns',
-  'Active HTTPS will\ngive you a shield.',
-  '52% of users\nabandon a site\nwhich loads longer\nthan 3s',
+  'Every asteroid represents one loaded resource.',
+  'Every shot represents a 10kb download.',
+  "Unsed CSS/JS asteroids can't be destroyed",
+  'An orange asteroid means more than 50% of the resource is unused',
+  'A red asteroid means more than 50% of the resource is used',
+  'A green asteroid means more than 85% of the resource is used',
+  'An active service worker gives faster fire rate',
+  'Active HTTPS will give you a shield.',
+  '52% of users abandon a site which loads longer than 3s',
+  'A well-built PWA gives you a powerup to destroy all asteroids at once',
 ];
 
 var urlToPlay; // the url being played
@@ -67,6 +71,7 @@ var bullet;
 var bullets;
 var bulletTime = 0;
 var lastShotTime = Date.now();
+var shoot_delay = 300;
 var asteroids;
 var goodies; // the goodies for the ship to catch
 
@@ -237,7 +242,7 @@ function update() {
 
   if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
     // we'll only allow one shot every x ms
-    if(Date.now() - lastShotTime > 300) {
+    if(Date.now() - lastShotTime > shoot_delay) {
       fireBullet();
       lastShotTime = Date.now();
     }
@@ -287,6 +292,12 @@ function update() {
       else if(goodie.type === "shield") {
           goodieSprite = goodies.create(point.x, point.y, 'shield_powerup');
       }
+      else if(goodie.type === "bomb") {
+          goodieSprite = goodies.create(point.x, point.y, 'pwa_logo');
+      }
+      else if(goodie.type === "shoot-rate") {
+          goodieSprite = goodies.create(point.x, point.y, 'sw_logo');
+      }
       goodieSprite.width = heartWidth;
       goodieSprite.height = heartHeight;
       goodieSprite.anchor.set(0.5);
@@ -321,7 +332,8 @@ function update() {
     } else {
       var values = [["Resources loaded", lastLevel.resourcesCount],
                     ["KB Downloaded", parseInt(lastLevel.totalSize/1024)],
-                    ["KB Wasted", parseInt(lastLevel.wastedSize/1024)]];
+                    ["KB Wasted", parseInt(lastLevel.wastedSize/1024)],
+                    ["JS Bootup", (lastLevel.bootupTime/1000).toFixed(1) + "s"]];
       showDetailsPopup("Level " + lastLevel.levelNumber + "<br>" + lastLevel.name + " finished!", values);
     }
   } else if (levels.length === 0 && currentLevel.resources.length === 0 && asteroids.length === 0 && ship.health > 0) {
@@ -354,16 +366,19 @@ function asteroidHit(bullet, asteroid) {
     createFloatingLabel(asteroid.label, asteroid.x, asteroid.y, asteroid);
   }
 
-  // and an explosion with aprticles!
+  // and an explosion with particles!
   emitter.x = asteroid.x;
   emitter.y = asteroid.y;
   emitter.start(true, 1000, null, 20);
 
   if (asteroid.health <= 0) {
-    asteroids.remove(asteroid, true);
-    score += parseInt(asteroid.size, 10);
+    destroyAsteroid(asteroid);
   }
+}
 
+function destroyAsteroid(asteroid) {
+  asteroids.remove(asteroid, true);
+  score += parseInt(asteroid.size, 10);
 }
 
 function createFloatingLabel(text, x, y, sourceSprite) {
@@ -420,7 +435,7 @@ function generateAsteroids() {
       var rnd = Math.random();
       var c = null;
       var asset_name = 'meteroid_neutral';
-      if (item.coverage && item.coverage > 75) asset_name = 'meteroid_green';
+      if (item.coverage && item.coverage > 85) asset_name = 'meteroid_green';
       else if (item.coverage && item.coverage > 50) asset_name = 'meteroid_red';
       else if (item.coverage && item.coverage > 0) asset_name = 'meteroid_orange';
       // psoition new asteroids on random point outside game
@@ -470,16 +485,24 @@ function createRandomPointOutsideGame() {
 function shipHitGoodie(ship, goodieSprite) {
   var goodie = goodieSprite.goodie;
   goodies.remove(goodieSprite);
-  if(goodie.type==="extra-life") {
+  if(goodie.type === "extra-life") {
     ship.health++;
   }
-  else if(goodie.type==="shield") {
+  else if(goodie.type === "shield") {
     ship.loadTexture('ship_shielded');
     ship.invincible = true;
     setTimeout(function(){
       ship.loadTexture('ship');
       ship.invincible = false;
     }, 10000)
+  }
+  else if(goodie.type === "bomb") {
+    for (var i = asteroids.children.length - 1; i >= 0; i--) {
+      destroyAsteroid(asteroids.children[i]);
+    }
+  }
+  else if(goodie.type === "shoot-rate") {
+    shoot_delay = 100;
   }
   createFloatingLabel(goodie.name, goodieSprite.x, goodieSprite.y, goodieSprite);
 }
