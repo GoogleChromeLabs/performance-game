@@ -29,7 +29,6 @@ function preload() {
   game.load.image('bullet', 'img/bullets.png');
   game.load.image('ship', 'img/ship.png');
   game.load.image('heart', 'img/heart.png');
-  game.load.image('particle', 'img/bullets.png');
   game.load.image('popupBg', 'img/popup.png');
   game.load.image('background', 'img/background.png');
   game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
@@ -37,6 +36,7 @@ function preload() {
   game.load.image('ship_shielded', 'img/ship_shielded.png');
   game.load.image('pwa_logo', 'img/pwa_logo.png');
   game.load.image('sw_logo', 'img/sw_logo.png');
+  game.load.image('explosion_particle', 'img/explosion_particle.png');
 }
 
 var hints = [
@@ -85,7 +85,8 @@ var score = 0;
 var scoreLabel;
 
 var gameOver = false;
-var emitter;
+var hitEmitter;
+var explosionEmitter;
 
 var synthesizer;
 
@@ -114,7 +115,9 @@ function getGamestateAndStart() {
     clearInterval(hintInterval);
     showInfoPopup("Level " + currentLevel.levelNumber + "<br>" + currentLevel.name, "");
   }).catch(function(error) {
+    clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
+    showInfoPopup("Sorry, we couldn't load this URL right now. Please try a different URL, or come back later.");
   });
 }
 
@@ -184,9 +187,19 @@ function create() {
   cursors = game.input.keyboard.createCursorKeys();
   game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR, Phaser.Keyboard.ENTER ]);
 
-  // emitter  for particles when a asteroid is destroyed
-  emitter = game.add.emitter(0, 0, 100);
-  emitter.makeParticles('particle');
+  // emitter  for particles when a asteroid is hit
+  hitEmitter = game.add.emitter(0, 0, 50);
+  hitEmitter.makeParticles('meteroid_neutral');
+  hitEmitter.gravity = 0;
+  hitEmitter.maxParticleScale = 0.1;
+  hitEmitter.minParticleScale = 0.05;
+  hitEmitter.setAlpha(0, 1);
+
+  // emitter  for particles when a asteroid is destroyes
+  explosionEmitter = game.add.emitter(0, 0, 70);
+  explosionEmitter.makeParticles('explosion_particle');
+  explosionEmitter.gravity = 0;
+  explosionEmitter.setAlpha(0, 0.1);
 
   // label for score
   var style = { font: '20px Arial', fill: '#ff0000' };
@@ -366,19 +379,28 @@ function asteroidHit(bullet, asteroid) {
     createFloatingLabel(asteroid.label, asteroid.x, asteroid.y, asteroid);
   }
 
-  // and an explosion with particles!
-  emitter.x = asteroid.x;
-  emitter.y = asteroid.y;
-  emitter.start(true, 1000, null, 20);
-
   if (asteroid.health <= 0) {
     destroyAsteroid(asteroid);
+  }
+  else {
+    // show hit particles
+    hitEmitter.x = asteroid.x;
+    hitEmitter.y = asteroid.y;
+    hitEmitter.start(true, 1000, null, 5);
   }
 }
 
 function destroyAsteroid(asteroid) {
   asteroids.remove(asteroid, true);
   score += parseInt(asteroid.size, 10);
+  // and an explosion with particles!
+  showExplosion(asteroid.x, asteroid.y);
+}
+
+function showExplosion(x, y) {
+  explosionEmitter.x = x;
+  explosionEmitter.y = y;
+  explosionEmitter.start(true, 300, 50, 70);
 }
 
 function createFloatingLabel(text, x, y, sourceSprite) {
@@ -489,12 +511,7 @@ function shipHitGoodie(ship, goodieSprite) {
     ship.health++;
   }
   else if(goodie.type === "shield") {
-    ship.loadTexture('ship_shielded');
-    ship.invincible = true;
-    setTimeout(function(){
-      ship.loadTexture('ship');
-      ship.invincible = false;
-    }, 10000)
+    makeShipInvincible(10000, true);
   }
   else if(goodie.type === "bomb") {
     for (var i = asteroids.children.length - 1; i >= 0; i--) {
@@ -507,16 +524,37 @@ function shipHitGoodie(ship, goodieSprite) {
   createFloatingLabel(goodie.name, goodieSprite.x, goodieSprite.y, goodieSprite);
 }
 
+function makeShipInvincible(duration, showShip) {
+  ship.alpha = showShip ? 1 : 0;
+  ship.loadTexture('ship_shielded');
+  ship.invincible = true;
+  setTimeout(function(){
+    ship.loadTexture('ship');
+    ship.invincible = false;
+  }, duration)
+}
+
 function shipHit(ship, asteroid) {
   if (ship.invincible) return; // after a hit make the ship indestructible for some secs to recover
   asteroids.remove(asteroid, true);
   ship.health--;
+  showExplosion(ship.x, ship.y);
   if (ship.health === 0) {
     endGame(false);
   }
-  ship.invincible = true;
-  ship.alpha = 0.5;
-  setTimeout(function() { ship.invincible = false; ship.alpha = 1; }, 3000);
+  else {
+    // hide the ship
+    ship.alpha = 0;
+    //make the ship invincible, a bit longer than it's hidden, so that player can respwan safely
+    makeShipInvincible(5000, false);
+    // reset everything for respawn
+    setTimeout(function() {
+      ship.alpha = 1;
+      ship.body.acceleration.set(0);
+      ship.body.angularVelocity = 0;
+      ship.anchor.set(0.5);
+    }, 3000);
+  }
 }
 
 
