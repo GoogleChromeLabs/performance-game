@@ -6,5 +6,5 @@ workbox.precaching.precacheAndRoute([]);
 
 workbox.routing.registerRoute(
   new RegExp('.*'),
-  workbox.strategies.networkFirst()
+  workbox.strategies.networkFirst({"networkTimeoutSeconds": 1})
 );
