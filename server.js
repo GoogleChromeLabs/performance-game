@@ -20,6 +20,7 @@ const {URL} = require('url');
 const express = require('express');
 const puppeteer = require('puppeteer');
 const lighthouse = require('lighthouse');
+const fullConfig = require('lighthouse/lighthouse-core/config/full-config.js');
 
 // create express server
 const app = express();
@@ -48,7 +49,7 @@ app.get('/gamestate.json', async(request, response) => {
     output: 'json',
     logLevel: 'error',
     throttlingMethod: 'devtools', // without that resource loading timeline doesn't fit perf metrics
-  });
+  }, fullConfig); // // full config to run all audits, otherwise we won'tr get the unused js one
 
   // for testing and debugging we can write out the result json, you Can
   // inspect it via the lighthouse viewer here: https://googlechrome.github.io/lighthouse/viewer/
