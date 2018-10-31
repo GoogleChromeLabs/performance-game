@@ -88,7 +88,10 @@ var gameOver = false;
 var hitEmitter;
 var explosionEmitter;
 
-var synthesizer;
+// due to chrome autoplay block we'll only create them lazyly after user interaction with site
+var audio_base_loop;
+var audio_mixin1;
+var audio_mixin2;
 
 function getGamestateAndStart() {
   //show loading popup
@@ -114,6 +117,8 @@ function getGamestateAndStart() {
     currentLevel = levels.shift();
     clearInterval(hintInterval);
     showInfoPopup("Level " + currentLevel.levelNumber + "<br>" + currentLevel.name, "");
+    // now that we had a user interaction we can create the synthesizers
+    initAudio();
   }).catch(function(error) {
     clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
@@ -222,20 +227,6 @@ function create() {
 }
 
 function update() {
-  // lazy load synthesizer, as lib is async
-  if(!synthesizer && typeof Tone !== 'undefined') {
-    synthesizer = new Tone.Synth({
-    	oscillator : {
-      	type : 'triangle8'
-      },
-      envelope : {
-      	attack : 2,
-        decay : 1,
-        sustain: 0.4,
-        release: 4
-      }
-    }).toMaster()
-  }
 
   if(!currentLevel) return;
 
@@ -366,6 +357,18 @@ function update() {
     }
   }
 
+  // base loop gets faster with amount of asteroids live
+  audio_base_loop.playbackRate = Math.ceil(asteroids.children.length/10);
+  // unmute mixins based on overall download size and coverage represented in current asteroids
+  var size = 0;
+  var coverage = 0;
+  for (var i = 0; i < asteroids.children.length; i++) {
+    size += asteroids.children[i].size;
+    coverage += asteroids.children[i].coverage / asteroids.children.length;
+  }
+  audio_mixin1.mute = size > 200; // enable first mixin if there are more than 200kb in asteroids on screen
+  audio_mixin2.mute = coverage < 50;  // enable second mixin when more than 50% of resources were wasted
+
   // update score
   scoreLabel.text = score;
 
@@ -460,7 +463,7 @@ function generateAsteroids() {
       if (item.coverage && item.coverage > 85) asset_name = 'meteroid_green';
       else if (item.coverage && item.coverage > 50) asset_name = 'meteroid_red';
       else if (item.coverage && item.coverage > 0) asset_name = 'meteroid_orange';
-      // psoition new asteroids on random point outside game
+      // position new asteroids on random point outside game
       var point = createRandomPointOutsideGame();
       c = asteroids.create(point.x, point.y, asset_name);
       c.width = size;
@@ -476,19 +479,6 @@ function generateAsteroids() {
       game.physics.enable(c, Phaser.Physics.ARCADE);
       c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * 60 + 40, 10));
       currentLevel.resources.splice(i, 1);
-      // playing a sound for the new asteroid
-      /*if(synthesizer) {
-          Tone.Transport.scheduleRepeat(function(time){
-              synthesizer.triggerAttackRelease('c4','8n');
-          },"2n");
-          Tone.Transport.scheduleRepeat(function(time){
-              synthesizer.triggerAttackRelease('d5','8n');
-          },"2n");
-          Tone.Transport.scheduleRepeat(function(time){
-              synthesizer.triggerAttackRelease('a2','8n');
-          },"2n");
-          Tone.Transport.start();
-      }*/
       console.log('Adding asteroid for resource: ' + item);
     }
   }
@@ -497,10 +487,10 @@ function generateAsteroids() {
 function createRandomPointOutsideGame() {
   var rnd = Math.random();
   var point = {x: 0, y: 0};
-  if (rnd < 0.25) point = {x: 0, y: game.world.randomY};
-  else if (rnd < 0.5) point = {x: game.width, y: game.world.randomY};
-  else if (rnd < 0.75) point = {x: game.world.randomX, y: 0};
-  else point = {x: game.world.randomX, y: game.height};
+  if (rnd < 0.25) point = {x: -50, y: game.world.randomY};
+  else if (rnd < 0.5) point = {x: game.width + 50, y: game.world.randomY};
+  else if (rnd < 0.75) point = {x: game.world.randomX, y: -50};
+  else point = {x: game.world.randomX, y: game.height + 50};
   return point;
 }
 
@@ -567,6 +557,27 @@ function endGame(won) {
   gameOver = true;
   if (won) showInfoPopup('You won!');
   else showInfoPopup('Sorry, you lost!');
+}
+
+function initAudio() {
+  var base_synthesizer = new Tone.MembraneSynth().toMaster();
+  var mix_synthesizer1 = new Tone.MetalSynth().toMaster();
+  var mix_synthesizer2 = new Tone.MonoSynth().toMaster();
+
+  //create a loop
+  audio_base_loop = new Tone.Loop(function(time){
+    base_synthesizer.triggerAttackRelease("D1", "8n", time)
+  }, "4n").start(0);
+
+  audio_mixin1 = new Tone.Loop(function(time){
+    mix_synthesizer1.triggerAttackRelease("F2", "8n", time)
+  }, "4n").start("8n");
+
+  audio_mixin2 = new Tone.Loop(function(time){
+    mix_synthesizer2.triggerAttackRelease("A2", "8n", time)
+  }, "1t").start(0);
+
+  Tone.Transport.start('+0.1');
 }
 
 // ------------------ popup handling -----------------------
