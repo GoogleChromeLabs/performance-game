@@ -52,7 +52,7 @@ limitations under the License.
        line-height: 150%;
      }
 
-     #infoPopup, #tablePopup {
+     #infoPopup, #tablePopup, #gameEndPopup {
        background-color: #bd6a1d;
        border-radius: 25px;
        border: 6px solid #833f00;
@@ -62,13 +62,13 @@ limitations under the License.
        width: 400px;
      }
 
-     #infoPopupTitle, #tablePopupTitle, #urlPopupTitle {
+     #infoPopupTitle, #tablePopupTitle, #urlPopupTitle, #gameEndPopupTitle {
        font-size:20pt;
        color: white;
        line-height: 150%;
      }
 
-     #infoPopupContent, #tablePopupContent {
+     #infoPopupContent, #tablePopupContent, #gameEndPopupContent {
        font-size:20pt;
        color: white;
        line-height: 150%;
@@ -88,32 +88,61 @@ limitations under the License.
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-123358764-1"></script>
     <script async src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.3.10/Tone.js"></script>
     <script>
+
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'UA-123358764-1');
 
-      window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent Chrome 67 and earlier from automatically showing the prompt
-        e.preventDefault();
-      });
-
-      if ('serviceWorker' in navigator) {
-         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js');
-         });
-      }
-
-      function startGame() {
-        var url = document.getElementById('url').value;
-        var hostname = (new URL(url)).hostname;
-        gtag('event', 'game', {
-          'event_category' : 'start',
-          'event_label' : hostname
+        window.addEventListener('beforeinstallprompt', (e) => {
+          // Prevent Chrome 67 and earlier from automatically showing the prompt
+          e.preventDefault();
         });
-        document.getElementById('urlInputDialog').close();
-        getGamestateAndStart();
-      }
+
+        if ('serviceWorker' in navigator) {
+           window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/sw.js');
+              if (navigator.share) {
+                document.getElementById("share_btn").style.visibility = "visible";
+              }
+              else {
+                document.getElementById("share_btn").style.visibility = "hidden";
+                console.log("Weh Share unavailable, hiding sharing option!");
+              }
+           });
+        }
+
+
+        function startGame() {
+          var url = document.getElementById('url').value;
+          var hostname = (new URL(url)).hostname;
+          gtag('event', 'game', {
+            'event_category' : 'start',
+            'event_label' : hostname
+          });
+          document.getElementById('urlInputDialog').close();
+          getGamestateAndStart();
+        }
+
+        /**
+        * Route the user towards a full performance report on PSI domain
+        **/
+        function seeReport() {
+          var url = document.getElementById('url').value;
+          document.location.href = "https://developers.google.com/speed/pagespeed/insights/?url=" + encodeURI(url);
+        }
+
+        function share() {
+          if (navigator.share) {
+            navigator.share({
+                title: "The Performance Game",
+                text: "I played through my website's loading experience!",
+                url: "https://" + window.location.hostname,
+            })
+              .then(() => console.log('Successful share'))
+              .catch((error) => console.log('Error sharing', error));
+          }
+        }
 
     </script>
 </head>
@@ -127,13 +156,13 @@ limitations under the License.
         Play through the loading process of any website, fight wasted resources and anti-patterns!
         Will you be faster than your site?
     </div>
-    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+    <div class="mdl-textfield mdl-js-textfield">
       <input class="mdl-textfield__input" type="url"
              required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
              title="Please enter a valid URL"
              id="url">
       <span class="mdl-textfield__error">URLs only</span>
-      <label class="mdl-textfield__label" for="sample3">URL to play</label>
+      <label class="mdl-textfield__label" for="url">URL to play</label>
      </div>
     <div class="mdl-dialog__actions">
       <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="startGame();">Play</button>
@@ -157,6 +186,29 @@ limitations under the License.
       </p>
       <table id = "tablePopupContent">
       </table>
+    </div>
+  </dialog>
+
+
+  <dialog class="mdl-dialog" id="gameEndPopup">
+    <div class="mdl-dialog__content">
+      <p>
+        <div id="gameEndPopupTitle">
+        </div>
+      </p>
+      <p>
+        <div id = "gameEndPopupContent">
+        </div>
+      </p>
+      <div class="mdl-dialog__actions">
+        <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="document.location.href='/';" id="replay_btn">
+          <i class="material-icons">refresh</i>
+        </button>
+        <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="share();" id="share_btn">
+          <i class="material-icons">share</i>
+        </button>
+        <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="seeReport();">Analysis</button>
+      </div>
     </div>
   </dialog>
 

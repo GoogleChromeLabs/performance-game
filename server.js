@@ -29,6 +29,24 @@ const app = express();
 // setting up routes for the various files
 app.use(express.static('public'));
 
+// this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
+// All this will be used to create a level to play through
+app.get('/report.html', async(request, response) => {
+  console.log("Gernating html report for: " + request.query.url);
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox'],
+    timeout: 10000,
+  });
+
+  const lhr = await lighthouse(request.query.url, {
+    port: (new URL(browser.wsEndpoint())).port,
+    output: 'html',
+  }, fullConfig); // // full config to run all audits, otherwise we won'tr get the unused js one
+
+  response.contentType('text/html');
+  response.end(lhr.report);
+});
+
 
 // this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
 // All this will be used to create a level to play through

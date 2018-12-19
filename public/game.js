@@ -81,17 +81,9 @@ var heartHeight = 30;
 
 var labels = [];
 
-var score = 0;
-var scoreLabel;
-
 var gameOver = false;
 var hitEmitter;
 var explosionEmitter;
-
-// due to chrome autoplay block we'll only create them lazyly after user interaction with site
-var audio_base_loop;
-var audio_mixin1;
-var audio_mixin2;
 
 function getGamestateAndStart() {
   //show loading popup
@@ -117,8 +109,6 @@ function getGamestateAndStart() {
     currentLevel = levels.shift();
     clearInterval(hintInterval);
     showInfoPopup("Level " + currentLevel.levelNumber + "<br>" + currentLevel.name, "");
-    // now that we had a user interaction we can create the synthesizers
-    initAudio();
   }).catch(function(error) {
     clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
@@ -206,19 +196,11 @@ function create() {
   explosionEmitter.gravity = 0;
   explosionEmitter.setAlpha(0, 0.1);
 
-  // label for score
-  var style = { font: '20px Arial', fill: '#ff0000' };
-  scoreLabel = game.add.text(game.world.centerX, 25, '0', style);
-  scoreLabel.anchor.set(0.5);
-
 
   var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
   keyEnter.onDown.add(function() {
-    if (gameOver)document.location.href = '/endscreen.html?url=' + urlToPlay + '&score=' + score + '&lhr_perf_score=' + gamestate.lhr_perf_score;
-    else {
-      if(isDetailsPopupShowing()) closeDetailsPopup();
-      else closeInfoPopup();
-    }
+    if(isDetailsPopupShowing()) closeDetailsPopup();
+    else closeInfoPopup();
   }, this);
 
   game.paused = true;
@@ -357,21 +339,6 @@ function update() {
     }
   }
 
-  // base loop gets faster with amount of asteroids live
-  audio_base_loop.playbackRate = Math.ceil(asteroids.children.length/10);
-  // unmute mixins based on overall download size and coverage represented in current asteroids
-  var size = 0;
-  var coverage = 0;
-  for (var i = 0; i < asteroids.children.length; i++) {
-    size += asteroids.children[i].size;
-    coverage += asteroids.children[i].coverage / asteroids.children.length;
-  }
-  audio_mixin1.mute = size > 200; // enable first mixin if there are more than 200kb in asteroids on screen
-  audio_mixin2.mute = coverage < 50;  // enable second mixin when more than 50% of resources were wasted
-
-  // update score
-  scoreLabel.text = score;
-
 }
 
 //  Called if the bullet hits one of the veg sprites
@@ -395,7 +362,6 @@ function asteroidHit(bullet, asteroid) {
 
 function destroyAsteroid(asteroid) {
   asteroids.remove(asteroid, true);
-  score += parseInt(asteroid.size, 10);
   // and an explosion with particles!
   showExplosion(asteroid.x, asteroid.y);
 }
@@ -541,8 +507,10 @@ function shipHit(ship, asteroid) {
     setTimeout(function() {
       ship.alpha = 1;
       ship.body.acceleration.set(0);
-      ship.body.angularVelocity = 0;
-      ship.anchor.set(0.5);
+      ship.body.speed = 0;
+      ship.body.velocity.set(0,0);
+      ship.x = game.width/2;
+      ship.y = game.height/2;
     }, 3000);
   }
 }
@@ -555,30 +523,13 @@ function getUrlParam(key) {
 
 function endGame(won) {
   gameOver = true;
-  if (won) showInfoPopup('You won!');
-  else showInfoPopup('Sorry, you lost!');
+  showGameEndPopup(won);
+  gtag('event', 'game', {
+    'event_category' : 'end',
+    'event_label' : won ? "won" : "lost"
+  });
 }
 
-function initAudio() {
-  var base_synthesizer = new Tone.MembraneSynth().toMaster();
-  var mix_synthesizer1 = new Tone.MetalSynth().toMaster();
-  var mix_synthesizer2 = new Tone.MonoSynth().toMaster();
-
-  //create a loop
-  audio_base_loop = new Tone.Loop(function(time){
-    base_synthesizer.triggerAttackRelease("D1", "8n", time)
-  }, "4n").start(0);
-
-  audio_mixin1 = new Tone.Loop(function(time){
-    mix_synthesizer1.triggerAttackRelease("F2", "8n", time)
-  }, "4n").start("8n");
-
-  audio_mixin2 = new Tone.Loop(function(time){
-    mix_synthesizer2.triggerAttackRelease("A2", "8n", time)
-  }, "1t").start(0);
-
-  Tone.Transport.start('+0.1');
-}
 
 // ------------------ popup handling -----------------------
 
@@ -620,4 +571,14 @@ function closeDetailsPopup() {
 
 function isDetailsPopupShowing() {
   return document.getElementById("tablePopup").open;
+}
+
+function showGameEndPopup(won) {
+  var title = document.getElementById("gameEndPopupTitle");
+  if (!won) title.innerHTML = "You have lost the game!";
+  else title.innerHTML = "You won the game!";
+
+  var popup = document.getElementById("gameEndPopup");
+  if(!popup.open) popup.showModal();
+  game.paused = true;
 }
