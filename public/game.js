@@ -196,16 +196,35 @@ function create() {
   explosionEmitter.gravity = 0;
   explosionEmitter.setAlpha(0, 0.1);
 
-
-  var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-  keyEnter.onDown.add(function() {
+  // enter or touch closes dialogs
+  var closePopups = function() {
     if(isDetailsPopupShowing()) closeDetailsPopup();
     else closeInfoPopup();
-  }, this);
+  };
+  var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+  keyEnter.onDown.add(closePopups, this);
+  document.body.addEventListener("touchend", function() {
+    if(game.paused) closePopups();
+    else fireBullet();
+  }, false);
+
+  // motion info
+  window.addEventListener("deviceorientation", handleOrientation, true);
 
   game.paused = true;
 
   document.getElementById('urlInputDialog').showModal();
+}
+
+function handleOrientation(e) {
+    if(game.paused) return;
+    var x = e.gamma;
+    var y = e.beta;
+    var radian = Phaser.Math.angleBetweenPoints(ship.body.position, new Phaser.Point(ship.body.x+x, ship.body.y+y));
+    ship.angle = radian * 180 / Math.PI;
+    ship.body.velocity.x += x;
+    ship.body.velocity.y += y;
+
 }
 
 function update() {
@@ -574,6 +593,7 @@ function isDetailsPopupShowing() {
 }
 
 function showGameEndPopup(won) {
+  prepareEndDialog();
   var title = document.getElementById("gameEndPopupTitle");
   if (!won) title.innerHTML = "You have lost the game!";
   else title.innerHTML = "You won the game!";

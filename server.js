@@ -92,7 +92,7 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_has_https = lhr.audits['is-on-https'].rawValue;
   var lhr_has_offline = lhr.audits['works-offline'].rawValue;
   var lhr_unused_js = lhr.audits['unused-javascript'] ? lhr.audits['unused-javascript'].details.items : [];
-  var lhr_bootup_time = lhr.audits['bootup-time'] ? lhr.audits['bootup-time'].details.items : [];
+  var lhr_bootup_time = lhr.audits['bootup-time'] && lhr.audits['bootup-time'].details ? lhr.audits['bootup-time'].details.items : [];
 
   // for efficiency let's move the bootup time from list into a has, indexed by url
   var bootupHash = [];
