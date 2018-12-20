@@ -31,20 +31,14 @@ limitations under the License.
         top: 0;
       }
 
+      i {
+          margin-left: 10px;
+      }
+
       #tablePopupContent {
         width: 100%;
         text-align: left;
       }
-
-
-     #urlInputDialog {
-       background-color: #bd6a1d;
-       border-radius: 25px;
-       border: 6px solid #833f00;
-       padding: 20px;
-       max-width: 80%;
-       width: 400px;
-     }
 
      #urlPopupContent {
        font-size:14pt;
@@ -52,7 +46,7 @@ limitations under the License.
        line-height: 150%;
      }
 
-     #infoPopup, #tablePopup, #gameEndPopup {
+     #infoPopup, #tablePopup, #gameEndPopup, #urlInputDialog {
        background-color: #bd6a1d;
        border-radius: 25px;
        border: 6px solid #833f00;
@@ -74,10 +68,11 @@ limitations under the License.
        line-height: 150%;
      }
 
-     .dialogButton {
-       background-color: #833f00;
-       border-radius: 25px;
+     #install_btn, #share_btn, #replay_btn, #report_btn, #start_btn {
+       color: white;
+       margin: 5px;
      }
+
 
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -94,22 +89,50 @@ limitations under the License.
         gtag('js', new Date());
         gtag('config', 'UA-123358764-1');
 
+        let deferredPrompt;
+
         window.addEventListener('beforeinstallprompt', (e) => {
-          // Prevent Chrome 67 and earlier from automatically showing the prompt
           e.preventDefault();
+          deferredPrompt = e;
         });
 
         if ('serviceWorker' in navigator) {
            window.addEventListener('load', () => {
               navigator.serviceWorker.register('/sw.js');
-              if (navigator.share) {
-                document.getElementById("share_btn").style.visibility = "visible";
-              }
-              else {
-                document.getElementById("share_btn").style.visibility = "hidden";
-                console.log("Weh Share unavailable, hiding sharing option!");
-              }
            });
+        }
+
+        function prepareEndDialog() {
+          if (navigator.share) {
+            document.getElementById("share_btn").style.display = "inline-block";
+          }
+          else {
+            document.getElementById("share_btn").style.display = "none";
+            console.log("Weh Share unavailable, hiding sharing option!");
+          }
+          if (deferredPrompt) {
+            document.getElementById("install_btn").style.display = "inline-block";
+            document.getElementById("install_btn").onclick = function() {
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice
+                .then((choiceResult) => {
+                  if (choiceResult.outcome === 'accepted') {
+                    gtag('event', 'a2hs', {
+                      'event_category' : 'installed',
+                    });
+                  } else {
+                    gtag('event', 'a2hs', {
+                      'event_category' : 'aborted',
+                    });
+                  }
+                  deferredPrompt = null;
+                });
+            }
+          }
+          else {
+            document.getElementById("install_btn").style.display = "none";
+            console.log("Web Share unavailable, hiding sharing option!");
+          }
         }
 
 
@@ -129,7 +152,8 @@ limitations under the License.
         **/
         function seeReport() {
           var url = document.getElementById('url').value;
-          document.location.href = "https://developers.google.com/speed/pagespeed/insights/?url=" + encodeURI(url);
+          var report_url = "https://developers.google.com/speed/pagespeed/insights/?url=" + encodeURI(url);
+          window.open(report_url, '_blank');
         }
 
         function share() {
@@ -154,7 +178,6 @@ limitations under the License.
     <h4 class="mdl-dialog__title" id="urlPopupTitle">The performance game!</h4>
     <div class="mdl-dialog__content" id="urlPopupContent">
         Play through the loading process of any website, fight wasted resources and anti-patterns!
-        Will you be faster than your site?
     </div>
     <div class="mdl-textfield mdl-js-textfield">
       <input class="mdl-textfield__input" type="url"
@@ -165,7 +188,7 @@ limitations under the License.
       <label class="mdl-textfield__label" for="url">URL to play</label>
      </div>
     <div class="mdl-dialog__actions">
-      <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="startGame();">Play</button>
+      <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="startGame();" id="start_btn">Play</button>
     </div>
   </dialog>
 
@@ -200,14 +223,19 @@ limitations under the License.
         <div id = "gameEndPopupContent">
         </div>
       </p>
-      <div class="mdl-dialog__actions">
+      <div class="mdl-dialog__actions mdl-dialog__actions--full-width">
         <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="document.location.href='/';" id="replay_btn">
-          <i class="material-icons">refresh</i>
+          Play Again<i class="material-icons">refresh</i>
         </button>
         <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="share();" id="share_btn">
-          <i class="material-icons">share</i>
+          Share<i class="material-icons">share</i>
         </button>
-        <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="seeReport();">Analysis</button>
+        <button type="button" class="mdl-button" style="background-color:#833f00;" id="install_btn">
+          Add to Homescreen<i class="material-icons">system_update</i>
+        </button>
+        <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="seeReport();" id="report_btn">
+          Full Perf Report<i class="material-icons">list_alt</i>
+        </button>
       </div>
     </div>
   </dialog>
