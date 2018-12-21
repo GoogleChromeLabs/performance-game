@@ -87,7 +87,7 @@ limitations under the License.
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'UA-123358764-1');
+        gtag('config', 'UA-123358764-1', { 'anonymize_ip': true });
 
         let deferredPrompt;
 
@@ -135,9 +135,17 @@ limitations under the License.
           }
         }
 
+        function getInputURL() {
+          var u = document.getElementById('url').value;
+          if(u.indexOf("http") != 0) {
+            u = "http://" + u;
+          }
+          return u;
+        }
+
 
         function startGame() {
-          var url = document.getElementById('url').value;
+          var url = getInputURL();
           var hostname = (new URL(url)).hostname;
           gtag('event', 'game', {
             'event_category' : 'start',
@@ -151,7 +159,7 @@ limitations under the License.
         * Route the user towards a full performance report on PSI domain
         **/
         function seeReport() {
-          var url = document.getElementById('url').value;
+          var url = getInputURL();
           var report_url = "https://developers.google.com/speed/pagespeed/insights/?url=" + encodeURI(url);
           window.open(report_url, '_blank');
         }
@@ -177,19 +185,21 @@ limitations under the License.
 <dialog class="mdl-dialog" id="urlInputDialog">
     <h4 class="mdl-dialog__title" id="urlPopupTitle">The performance game!</h4>
     <div class="mdl-dialog__content" id="urlPopupContent">
-        Play through the loading process of any website, fight wasted resources and anti-patterns!
+        Fight slow loading websites, one resource at a time!
     </div>
-    <div class="mdl-textfield mdl-js-textfield">
-      <input class="mdl-textfield__input" type="url"
-             required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
-             title="Please enter a valid URL"
-             id="url">
-      <span class="mdl-textfield__error">URLs only</span>
-      <label class="mdl-textfield__label" for="url">URL to play</label>
-     </div>
-    <div class="mdl-dialog__actions">
-      <button type="button" class="mdl-button" style="background-color:#833f00;" onclick="startGame();" id="start_btn">Play</button>
-    </div>
+    <form>
+      <div class="mdl-textfield mdl-js-textfield">
+        <input class="mdl-textfield__input"
+               required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+               title="Please enter a valid URL"
+               id="url">
+        <span class="mdl-textfield__error">URLs only</span>
+        <label class="mdl-textfield__label" for="url">URL to play</label>
+       </div>
+      <div class="mdl-dialog__actions">
+        <button type="button" disabled class="mdl-button" style="background-color:#833f00;" onclick="startGame();" id="start_btn">Play</button>
+      </div>
+    </form>
   </dialog>
 
 
@@ -239,6 +249,21 @@ limitations under the License.
       </div>
     </div>
   </dialog>
+
+  <script>
+    var elem = document.getElementById("url");
+    var btn = document.getElementById("start_btn");
+    // enable disble button depending on if input is valid
+    elem.oninput = function(e) {
+      btn.disabled = !elem.validity.valid;
+      btn.style.color = elem.validity.valid ? "#ffffff" : "#666666";
+    }
+    // enter on input triggers button
+    elem.addEventListener("keyup", function(e){
+      if(e.keyCode === 13)
+      btn.click();
+    });
+  </script>
 
 </body>
 </html>

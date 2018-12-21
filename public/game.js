@@ -51,6 +51,14 @@ var hints = [
   '52% of users abandon a site which loads longer than 3s',
   'A well-built PWA gives you a powerup to destroy all asteroids at once',
 ];
+// give correct control advice
+// we do not (!!) use user agent here, to accomodate for chrome emulator
+if(navigator.platform==="Android" || navigator.platform==="iOS") {
+  hints.push("Keep device leveled to stop ship, tilt for movement, tuch to fire!");
+}
+else {
+  hints.push("Control with arrow keys, fire with space, close dialogs with Enter!");
+}
 
 var urlToPlay; // the url being played
 
@@ -94,7 +102,7 @@ function getGamestateAndStart() {
     showLoadingText = !showLoadingText;
   }, 4000);
   // get gamestate from server to start game
-  urlToPlay = document.getElementById('url').value;
+  urlToPlay = getInputURL();
   fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origin'}).then(function(response) {
     if (response.ok) {
       console.log('success');
