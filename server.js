@@ -29,24 +29,6 @@ const app = express();
 // setting up routes for the various files
 app.use(express.static('public'));
 
-// this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
-// All this will be used to create a level to play through
-app.get('/report.html', async(request, response) => {
-  console.log("Gernating html report for: " + request.query.url);
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox'],
-    timeout: 10000,
-  });
-
-  const lhr = await lighthouse(request.query.url, {
-    port: (new URL(browser.wsEndpoint())).port,
-    output: 'html',
-  }, fullConfig); // // full config to run all audits, otherwise we won'tr get the unused js one
-
-  response.contentType('text/html');
-  response.end(lhr.report);
-});
-
 
 // this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
 // All this will be used to create a level to play through
@@ -119,6 +101,7 @@ app.get('/gamestate.json', async(request, response) => {
   var resources2 = [];
   var resources3 = [];
   var resources4 = [];
+  var lastResTime;
   for (var i = 0; i < lhr_network.length; i++) {
     var res = lhr_network[i];
     // let's skip the really small ones (analytics pings etc.)
@@ -135,13 +118,16 @@ app.get('/gamestate.json', async(request, response) => {
     if (res.endTime < lhr_fcp) resources1.push(res);
     else if (res.endTime < lhr_psi) resources2.push(res);
     else if (res.endTime < lhr_interactive) resources3.push(res);
-    else resources4.push(res);
+    else {
+      resources4.push(res);
+      lastResTime = res.endTime;
+    }
   }
   var levels = [];
-  var level1 = {name: 'First Contentful Paint', resources: resources1};
-  var level2 = {name: 'Speed Index', resources: resources2};
-  var level3 = {name: 'Interactive', resources: resources3};
-  var level4 = {name: 'Full Load', resources: resources4};
+  var level1 = {name: 'First Contentful Paint', resources: resources1, time: lhr_fcp};
+  var level2 = {name: 'Speed Index', resources: resources2, time: lhr_psi};
+  var level3 = {name: 'Interactive', resources: resources3, time: lhr_interactive};
+  var level4 = {name: 'Full Load', resources: resources4, time: lastResTime};
   // only add levels with resources in them
   if (resources1.length > 0) levels.push(level1);
   if (resources2.length > 0) levels.push(level2);

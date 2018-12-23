@@ -42,7 +42,6 @@ function preload() {
 var hints = [
   'Every asteroid represents one loaded resource.',
   'Every shot represents a 10kb download.',
-  "Unsed CSS/JS asteroids can't be destroyed",
   'An orange asteroid means more than 50% of the resource is unused',
   'A red asteroid means more than 50% of the resource is used',
   'A green asteroid means more than 85% of the resource is used',
@@ -92,6 +91,8 @@ var labels = [];
 var gameOver = false;
 var hitEmitter;
 var explosionEmitter;
+
+var dialogOpened; // timestamp to remember when a dialog was opened, we'll disalow closing for like 2s
 
 function getGamestateAndStart() {
   //show loading popup
@@ -204,8 +205,10 @@ function create() {
   explosionEmitter.gravity = 0;
   explosionEmitter.setAlpha(0, 0.1);
 
-  // enter or touch closes dialogs
+  // enter or touch closes dialogs - but only after gaem started, and if dialog is open more than 1.5s
   var closePopups = function() {
+    if(!gamestate) return;  // game didn't start yet
+    if(Date.now() - dialogOpened < 1500) return; // dialog just opened
     if(isDetailsPopupShowing()) closeDetailsPopup();
     else closeInfoPopup();
   };
@@ -343,7 +346,8 @@ function update() {
     if (currentLevel.resources.length === 0) {
       endGame(true);
     } else {
-      var values = [["Resources loaded", lastLevel.resourcesCount],
+      var values = [["Load Time", (lastLevel.time/1000).toFixed(1) + "s"],
+                    ["Resources loaded", lastLevel.resourcesCount],
                     ["KB Downloaded", parseInt(lastLevel.totalSize/1024)],
                     ["KB Wasted", parseInt(lastLevel.wastedSize/1024)],
                     ["JS Bootup", (lastLevel.bootupTime/1000).toFixed(1) + "s"]];
@@ -565,7 +569,10 @@ function showInfoPopup(title, text='') {
   document.getElementById("infoPopupTitle").innerHTML = title;
   document.getElementById("infoPopupContent").innerHTML = text;
   var popup = document.getElementById("infoPopup");
-  if(!popup.open) popup.showModal();
+  if(!popup.open) {
+    popup.showModal();
+    dialogOpened = Date.now();
+  }
   game.paused = true;
 }
 
@@ -584,7 +591,10 @@ function showDetailsPopup(title, values) {
     row.insertCell().innerText = values[i][1];
   }
   var popup = document.getElementById("tablePopup");
-  if(!popup.open) popup.showModal();
+  if(!popup.open) {
+    popup.showModal();
+    dialogOpened = Date.now();
+  }
   game.paused = true;
 }
 
@@ -607,6 +617,9 @@ function showGameEndPopup(won) {
   else title.innerHTML = "You won the game!";
 
   var popup = document.getElementById("gameEndPopup");
-  if(!popup.open) popup.showModal();
+  if(!popup.open) {
+    popup.showModal();
+    dialogOpened = Date.now();
+  }
   game.paused = true;
 }
