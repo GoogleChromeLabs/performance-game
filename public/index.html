@@ -77,11 +77,12 @@ limitations under the License.
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <script src="//cdn.jsdelivr.net/phaser/2.5.0/phaser.min.js"></script>
+    <script defer src="material_1_3_0.min.js"></script>
+    <script src="phaser_2_5_0.min.js"></script>
+    <script src="dialog-polyfill.js"></script>
     <script src="game.js"></script>
+    <link rel="stylesheet" type="text/css" href="dialog-polyfill.css" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-123358764-1"></script>
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.3.10/Tone.js"></script>
     <script>
 
         window.dataLayer = window.dataLayer || [];
@@ -168,11 +169,23 @@ limitations under the License.
           if (navigator.share) {
             navigator.share({
                 title: "The Performance Game",
-                text: "I played through my website's loading experience!",
-                url: "https://" + window.location.hostname,
+                text: "I am fighting slow loading websites - are you too? #perfmatters #perfgame",
+                url: "https://g.co/perfgame",
             })
-              .then(() => console.log('Successful share'))
-              .catch((error) => console.log('Error sharing', error));
+              .then(() => {
+                console.log('Successful share');
+                gtag('event', 'share', {
+                  'event_category' : 'success',
+                  'event_label' : ''
+                });
+              })
+              .catch((error) => {
+                console.log('Error sharing', error);
+                gtag('event', 'share', {
+                  'event_category' : 'error',
+                  'event_label' : error.message
+                });
+              });
           }
         }
 
@@ -190,7 +203,7 @@ limitations under the License.
     <form>
       <div class="mdl-textfield mdl-js-textfield">
         <input class="mdl-textfield__input"
-               required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+               required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
                title="Please enter a valid URL"
                id="url">
         <span class="mdl-textfield__error">URLs only</span>
@@ -251,6 +264,12 @@ limitations under the License.
   </dialog>
 
   <script>
+
+   dialogPolyfill.registerDialog(document.getElementById("urlInputDialog"));
+   dialogPolyfill.registerDialog(document.getElementById("infoPopup"));
+   dialogPolyfill.registerDialog(document.getElementById("tablePopup"));
+   dialogPolyfill.registerDialog(document.getElementById("gameEndPopup"));
+
     var elem = document.getElementById("url");
     var btn = document.getElementById("start_btn");
     // enable disble button depending on if input is valid
