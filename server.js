@@ -16,7 +16,7 @@ limitations under the License.
 'use strict';
 
 const {URL} = require('url');
-
+const compression = require('compression')
 const express = require('express');
 const puppeteer = require('puppeteer');
 const lighthouse = require('lighthouse');
@@ -24,6 +24,9 @@ const fullConfig = require('lighthouse/lighthouse-core/config/full-config.js');
 
 // create express server
 const app = express();
+
+//enable compression
+app.use(compression())
 
 
 // setting up routes for the various files
