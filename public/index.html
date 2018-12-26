@@ -14,13 +14,333 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
     <meta charset="utf-8" />
     <title>The Performance Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="Description" content="This game visualizes a Lighthouse performance report as a simple spaceship game!">
     <link rel="manifest" href="manifest.json">
     <style>
+      /**  from material spec to omit external css */
+
+      @charset "UTF-8";html {
+          color: rgba(0,0,0,.87)
+      }
+
+      audio,canvas,iframe,img,svg,video {
+          vertical-align: middle
+      }
+
+      a,.mdl-accordion,.mdl-button,.mdl-card,.mdl-checkbox,.mdl-dropdown-menu,.mdl-icon-toggle,.mdl-item,.mdl-radio,.mdl-slider,.mdl-switch,.mdl-tabs__tab {
+          -webkit-tap-highlight-color: transparent;
+          -webkit-tap-highlight-color: rgba(255,255,255,0)
+      }
+
+      html {
+          width: 100%;
+          height: 100%;
+          -ms-touch-action: manipulation;
+          touch-action: manipulation
+      }
+
+      body {
+          width: 100%;
+          min-height: 100%
+      }
+
+      html,body {
+          font-family: "Helvetica","Arial",sans-serif;
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 20px
+      }
+
+      h1,h2,h3,h4,h5,h6,p {
+          padding: 0
+      }
+
+      h3,h4 {
+          font-family: "Roboto","Helvetica","Arial",sans-serif;
+          font-weight: 400
+      }
+
+      h4 {
+          font-size: 24px;
+          line-height: 32px;
+          -moz-osx-font-smoothing: grayscale;
+          margin: 24px 0 16px
+      }
+
+      .mdl-button {
+          background: 0 0;
+          border: none;
+          border-radius: 2px;
+          color: #000;
+          position: relative;
+          height: 36px;
+          margin: 0;
+          min-width: 64px;
+          padding: 0 16px;
+          display: inline-block;
+          font-family: "Roboto","Helvetica","Arial",sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0;
+          overflow: hidden;
+          will-change: box-shadow;
+          transition: box-shadow .2s cubic-bezier(.4,0,1,1),background-color .2s cubic-bezier(.4,0,.2,1),color .2s cubic-bezier(.4,0,.2,1);
+          outline: none;
+          cursor: pointer;
+          text-decoration: none;
+          text-align: center;
+          line-height: 36px;
+          vertical-align: middle
+      }
+
+      .mdl-button[disabled][disabled],.mdl-button.mdl-button--disabled.mdl-button--disabled {
+          color: rgba(0,0,0,.26);
+          cursor: default;
+          background-color: transparent
+      }
+
+      .mdl-dialog {
+          border: none;
+          box-shadow: 0 9px 46px 8px rgba(0,0,0,.14),0 11px 15px -7px rgba(0,0,0,.12),0 24px 38px 3px rgba(0,0,0,.2);
+          width: 280px
+      }
+
+      .mdl-dialog__title {
+          padding: 24px 24px 0;
+          margin: 0;
+          font-size: 2.5rem
+      }
+
+      .mdl-dialog__actions {
+          padding: 8px 8px 8px 24px;
+          display: -webkit-flex;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-flex-direction: row-reverse;
+          -ms-flex-direction: row-reverse;
+          flex-direction: row-reverse;
+          -webkit-flex-wrap: wrap;
+          -ms-flex-wrap: wrap;
+          flex-wrap: wrap
+      }
+
+      .mdl-dialog__actions>* {
+          margin-right: 8px;
+          height: 36px
+      }
+
+      .mdl-dialog__actions>*:first-child {
+          margin-right: 0
+      }
+
+      .mdl-dialog__actions--full-width {
+          padding: 0 0 8px
+      }
+
+      .mdl-dialog__actions--full-width>* {
+          height: 48px;
+          -webkit-flex: 0 0 100%;
+          -ms-flex: 0 0 100%;
+          flex: 0 0 100%;
+          padding-right: 16px;
+          margin-right: 0;
+          text-align: right
+      }
+
+      .mdl-dialog__content {
+          padding: 20px 24px 24px;
+          color: rgba(0,0,0,.54)
+      }
+
+      .mdl-textfield {
+          position: relative;
+          font-size: 16px;
+          display: inline-block;
+          box-sizing: border-box;
+          width: 300px;
+          max-width: 100%;
+          margin: 0;
+          padding: 20px 0
+      }
+
+      .mdl-textfield__input {
+          border: none;
+          border-bottom: 1px solid rgba(0,0,0,.12);
+          display: block;
+          font-size: 16px;
+          font-family: "Helvetica","Arial",sans-serif;
+          margin: 0;
+          padding: 4px 0;
+          width: 100%;
+          background: 0 0;
+          text-align: left;
+          color: inherit
+      }
+
+
+      .mdl-textfield.is-invalid .mdl-textfield__input {
+          border-color: #d50000;
+          box-shadow: none
+      }
+
+      .mdl-textfield__label {
+          bottom: 0;
+          color: rgba(0,0,0,.26);
+          font-size: 16px;
+          left: 0;
+          right: 0;
+          pointer-events: none;
+          position: absolute;
+          display: block;
+          top: 24px;
+          width: 100%;
+          overflow: hidden;
+          white-space: nowrap;
+          text-align: left
+      }
+
+      .mdl-textfield__label:after {
+          background-color: rgb(63,81,181);
+          bottom: 20px;
+          content: '';
+          height: 2px;
+          left: 45%;
+          position: absolute;
+          transition-duration: .2s;
+          transition-timing-function: cubic-bezier(.4,0,.2,1);
+          visibility: hidden;
+          width: 10px
+      }
+
+      .mdl-textfield.is-invalid .mdl-textfield__label:after {
+          background-color: #d50000
+      }
+
+      .mdl-textfield__error {
+          color: #d50000;
+          position: absolute;
+          font-size: 12px;
+          margin-top: 3px;
+          visibility: hidden;
+          display: block
+      }
+
+      .mdl-textfield.is-invalid .mdl-textfield__error {
+          visibility: visible
+      }
+
+      body {
+          margin: 0
+      }
+
+      .mdl-snackbar {
+          position: fixed;
+          bottom: 0;
+          left: 50%;
+          cursor: default;
+          background-color: #323232;
+          z-index: 3;
+          display: block;
+          display: -webkit-flex;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-justify-content: space-between;
+          -ms-flex-pack: justify;
+          justify-content: space-between;
+          font-family: "Roboto","Helvetica","Arial",sans-serif;
+          will-change: transform;
+          -webkit-transform: translate(0,80px);
+          transform: translate(0,80px);
+          transition: transform .25s cubic-bezier(.4,0,1,1);
+          transition: transform .25s cubic-bezier(.4,0,1,1),-webkit-transform .25s cubic-bezier(.4,0,1,1);
+          pointer-events: none
+      }
+
+      @media (max-width: 479px) {
+          .mdl-snackbar {
+              width:100%;
+              left: 0;
+              min-height: 48px;
+              max-height: 80px
+          }
+      }
+
+      @media (min-width: 480px) {
+          .mdl-snackbar {
+              min-width:288px;
+              max-width: 568px;
+              border-radius: 2px;
+              -webkit-transform: translate(-50%,80px);
+              transform: translate(-50%,80px)
+          }
+      }
+
+      .mdl-snackbar--active {
+          -webkit-transform: translate(0,0);
+          transform: translate(0,0);
+          pointer-events: auto;
+          transition: transform .25s cubic-bezier(0,0,.2,1);
+          transition: transform .25s cubic-bezier(0,0,.2,1),-webkit-transform .25s cubic-bezier(0,0,.2,1)
+      }
+
+      @media (min-width: 480px) {
+          .mdl-snackbar--active {
+              -webkit-transform:translate(-50%,0);
+              transform: translate(-50%,0)
+          }
+      }
+
+      .mdl-snackbar__text {
+          padding: 14px 12px 14px 24px;
+          vertical-align: middle;
+          color: #fff;
+          float: left
+      }
+
+      .mdl-snackbar__action {
+          background: 0 0;
+          border: none;
+          color: rgb(255,64,129);
+          float: right;
+          padding: 14px 24px 14px 12px;
+          font-family: "Roboto","Helvetica","Arial",sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          text-transform: uppercase;
+          line-height: 1;
+          letter-spacing: 0;
+          overflow: hidden;
+          outline: none;
+          opacity: 0;
+          pointer-events: none;
+          cursor: pointer;
+          text-decoration: none;
+          text-align: center;
+          -webkit-align-self: center;
+          -ms-flex-item-align: center;
+          -ms-grid-row-align: center;
+          align-self: center
+      }
+
+      .mdl-snackbar__action::-moz-focus-inner {
+          border: 0
+      }
+
+      .mdl-snackbar__action:not([aria-hidden]) {
+          opacity: 1;
+          pointer-events: auto
+      }
+
+
+
+
+      /**  end material inport */
     	body { padding: 0; margin: 0; }
     	canvas {
         background: #eee;
@@ -76,7 +396,6 @@ limitations under the License.
 
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="material.indigo-pink.min.css">
     <script defer src="material_1_3_0.min.js"></script>
     <script src="phaser_2_5_0.min.js"></script>
     <script src="dialog-polyfill.js"></script>
@@ -89,6 +408,13 @@ limitations under the License.
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'UA-123358764-1', { 'anonymize_ip': true });
+
+        // make a stylesheet link
+        var myCSS = document.createElement( "link" );
+        myCSS.rel = "stylesheet";
+        myCSS.href = "material.indigo-pink.min.css";
+        // insert it at the end of the head in a legacy-friendly manner
+        document.head.insertBefore( myCSS, document.head.childNodes[ document.head.childNodes.length - 1 ].nextSibling );
 
         let deferredPrompt;
 
