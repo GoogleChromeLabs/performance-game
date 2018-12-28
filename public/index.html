@@ -341,9 +341,15 @@ limitations under the License.
 
 
       /**  end material inport */
-    	body { padding: 0; margin: 0; }
+    	body {
+        padding: 0;
+        margin: 0;
+        background-image: url("img/background.jpg");
+        background-repeat: repeat;
+      }
+
+
     	canvas {
-        background: #eee;
         position: fixed;
         width: 100%;
         height: 100%;
@@ -397,7 +403,7 @@ limitations under the License.
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <script defer src="material_1_3_0.min.js"></script>
-    <script src="phaser_2_5_0.min.js"></script>
+    <script defer src="phaser_2_5_0.min.js"></script>
     <script src="dialog-polyfill.js"></script>
     <script src="game.js"></script>
     <link rel="stylesheet" type="text/css" href="dialog-polyfill.css" />
@@ -519,8 +525,6 @@ limitations under the License.
 </head>
 <body>
 
-<canvas id="myCanvas" width="480" height="320"></canvas>
-
 <dialog class="mdl-dialog" id="urlInputDialog">
     <h4 class="mdl-dialog__title" id="urlPopupTitle">The performance game!</h4>
     <div class="mdl-dialog__content" id="urlPopupContent">
@@ -608,6 +612,8 @@ limitations under the License.
       if(e.keyCode === 13)
       btn.click();
     });
+
+    document.getElementById('urlInputDialog').showModal();
   </script>
 
 </body>
