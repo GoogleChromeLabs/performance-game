@@ -17,8 +17,7 @@ limitations under the License.
 
 'use strict';
 
-var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, 'phaser-example',
-  { preload: preload, create: create, update: update, render: render });
+var game;
 
 function preload() {
   game.load.crossOrigin = 'Anonymous';
@@ -30,13 +29,13 @@ function preload() {
   game.load.image('ship', 'img/ship.png');
   game.load.image('heart', 'img/heart.png');
   game.load.image('popupBg', 'img/popup.png');
-  game.load.image('background', 'img/background.png');
   game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
   game.load.image('shield_powerup', 'img/shield_powerup.png');
   game.load.image('ship_shielded', 'img/ship_shielded.png');
   game.load.image('pwa_logo', 'img/pwa_logo.png');
   game.load.image('sw_logo', 'img/sw_logo.png');
   game.load.image('explosion_particle', 'img/explosion_particle.png');
+  game.load.image('background', 'img/background.jpg');
 }
 
 var hints = [
@@ -105,6 +104,10 @@ function getGamestateAndStart() {
   // get gamestate from server to start game
   urlToPlay = getInputURL();
   fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origin'}).then(function(response) {
+    // this one is a bit tricky, as phaser is loade deferred.
+    // But creating the gameplay on server takes that long, that we can be sure it's loaded at this point
+    game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, 'myCanvas',
+      { preload: preload, create: create, update: update, render: render });
     if (response.ok) {
       console.log('success');
       return response.json();
@@ -121,6 +124,7 @@ function getGamestateAndStart() {
   }).catch(function(error) {
     clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
+    console.trace(error);
     showInfoPopup("Sorry, we couldn't load this URL right now. Please try a different URL, or come back later.");
   });
 }
@@ -131,11 +135,11 @@ function create() {
   game.renderer.clearBeforeRender = true;
   game.renderer.roundPixels = true;
 
+  //  A nice background
+  game.add.tileSprite(0, 0, game.width, game.height, 'background');
+
   //  We need arcade physics
   game.physics.startSystem(Phaser.Physics.ARCADE);
-
-  //  A spacey background
-  game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
   // the asteroids
   asteroids = game.add.group();
@@ -205,13 +209,6 @@ function create() {
   explosionEmitter.gravity = 0;
   explosionEmitter.setAlpha(0, 0.1);
 
-  // enter or touch closes dialogs - but only after gaem started, and if dialog is open more than 1.5s
-  var closePopups = function() {
-    if(!gamestate) return;  // game didn't start yet
-    if(Date.now() - dialogOpened < 1500) return; // dialog just opened
-    if(isDetailsPopupShowing()) closeDetailsPopup();
-    else closeInfoPopup();
-  };
   var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
   keyEnter.onDown.add(closePopups, this);
   document.body.addEventListener("touchend", function() {
@@ -223,8 +220,6 @@ function create() {
   window.addEventListener("deviceorientation", handleOrientation, true);
 
   game.paused = true;
-
-  document.getElementById('urlInputDialog').showModal();
 }
 
 function handleOrientation(e) {
@@ -371,6 +366,14 @@ function update() {
   }
 
 }
+
+// enter or touch closes dialogs - but only after gaem started, and if dialog is open more than 1.5s
+var closePopups = function() {
+  if(!gamestate) return;  // game didn't start yet
+  if(Date.now() - dialogOpened < 1500) return; // dialog just opened
+  if(isDetailsPopupShowing()) closeDetailsPopup();
+  else closeInfoPopup();
+};
 
 //  Called if the bullet hits one of the veg sprites
 function asteroidHit(bullet, asteroid) {
@@ -573,7 +576,7 @@ function showInfoPopup(title, text='') {
     popup.showModal();
     dialogOpened = Date.now();
   }
-  game.paused = true;
+  if(game && game.isBooted) game.paused = true;
 }
 
 function closeInfoPopup() {
