@@ -18,12 +18,13 @@ limitations under the License.
 const {URL} = require('url');
 const compression = require('compression')
 const express = require('express');
-const puppeteer = require('puppeteer');
-const lighthouse = require('lighthouse');
-const fullConfig = require('lighthouse/lighthouse-core/config/full-config.js');
+const fetch = require('node-fetch');
 
 // create express server
 const app = express();
+
+const API_KEY  = null;
+const PSI_REST_API = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed?category=performance&category=best-practices&category=pwa&strategy=mobile";
 
 //enable compression
 app.use(compression())
@@ -36,32 +37,37 @@ app.use(express.static('public'));
 // this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
 // All this will be used to create a level to play through
 app.get('/gamestate.json', async(request, response) => {
-  // todo: verify this is multi-thread safe and can handle the load
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox'],
-    timeout: 10000,
-  });
-  var url = request.query.url;
-  console.log('Starting game for url: ' + url);
 
-  // now run lighthouse
-  // Lighthouse will open URL. Puppeteer observes `targetchanged` and sets up network conditions.
-  // Possible race condition.
-  const {lhr} = await lighthouse(url, {
-    port: (new URL(browser.wsEndpoint())).port,
-    output: 'json',
-    logLevel: 'error',
-    throttlingMethod: 'devtools', // without that resource loading timeline doesn't fit perf metrics
-  }, fullConfig); // // full config to run all audits, otherwise we won'tr get the unused js one
+  // construct rest api url
+  var api_url = PSI_REST_API;
+  api_url += "&url=" + request.query.url;
+  if(API_KEY) {
+    api_url += "&key=" + API_KEY;
+  }
 
-  // for testing and debugging we can write out the result json, you Can
-  // inspect it via the lighthouse viewer here: https://googlechrome.github.io/lighthouse/viewer/
-  // fs.writeFile('myjsonfile.json', JSON.stringify(lhr), 'utf8', function(){});
+  // get the lighthouse report
+  var status;
+  var json;
+
+  try {
+    const res = await fetch(api_url);
+    status = res.status;
+    json = await res.json();
+  } catch (err) {
+   // handle error for example:
+   console.error(err);
+  }
+  console.log(status + "   --    " + JSON.stringify(json).substring(0,200));
+
+
+  var lhr = json.lighthouseResult;
 
   // get the audit results from lighthouse
-  var lhr_fcp = lhr.audits['first-contentful-paint'].rawValue;
-  var lhr_psi = lhr.audits['speed-index'].rawValue;
-  var lhr_interactive = lhr.audits['interactive'].rawValue;
+  var lhr_fcp = lhr.audits.metrics.details.items[0].firstContentfulPaint;
+  var lhr_observed_fcp = lhr.audits.metrics.details.items[0].observedFirstContentfulPaint
+  var lhr_fmp = lhr.audits.metrics.details.items[0].firstMeaningfulPaint;
+  var lhr_observed_fmp = lhr.audits.metrics.details.items[0].observedFirstMeaningfulPaint;
+  var lhr_interactive = lhr.audits.metrics.details.items[0].interactive;
   var lhr_screenshots = lhr.audits['screenshot-thumbnails'] && lhr.audits['screenshot-thumbnails'].details ? lhr.audits['screenshot-thumbnails'].details.items : [];
   var lhr_network = lhr.audits['network-requests'].details.items;
   var lhr_unused_css = lhr.audits['unused-css-rules'] ? lhr.audits['unused-css-rules'].details.items : [];
@@ -73,7 +79,7 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_pwa_score = lhr.categories.pwa.score;
   var lhr_has_sw = lhr.audits['service-worker'].rawValue;
   var lhr_has_a2hs = lhr.audits['webapp-install-banner'].rawValue;
-  var lhr_has_http2 = lhr.audits['uses-http2'].rawValue;
+  var lhr_has_http2 = lhr.audits['uses-http2'] ? lhr.audits['uses-http2'].rawValue: false;
   var lhr_has_https = lhr.audits['is-on-https'].rawValue;
   var lhr_has_offline = lhr.audits['works-offline'].rawValue;
   var lhr_unused_js = lhr.audits['unused-javascript'] ? lhr.audits['unused-javascript'].details.items : [];
@@ -95,9 +101,8 @@ app.get('/gamestate.json', async(request, response) => {
   addToWasted(lhr_offscreen_images, wasted, 'offscreen-images');
   addToWasted(lhr_unused_js, wasted, 'unused-javascript');
 
-  console.log('Lighthouse  finished, fcp: ' + lhr_fcp + ' - PSI: ' + lhr_psi + ' - TTI: ' + lhr_interactive);
-
-  await browser.close();
+  console.log('Lighthouse  finished, fcp: ' + lhr_fcp + ' - FMP: ' + lhr_fmp + ' - TTI: ' + lhr_interactive);
+  console.log('Lighthouse  observed, fcp: ' + lhr_observed_fcp + ' - FMP: ' + lhr_observed_fmp + ' - TTI: ' + lhr_interactive);
 
   // now segment resource loading into levels based on performance metrics
   var resources1 = [];
@@ -118,17 +123,43 @@ app.get('/gamestate.json', async(request, response) => {
     res.bootupTime = bootupHash[res.url] ? bootupHash[res.url] : 0;
     res.coverage = wasted[res.url] ? wasted[res.url].coverage : 100;
     res.wastedSize = wasted[res.url] ? wasted[res.url].wastedSize : 0;
-    if (res.endTime < lhr_fcp) resources1.push(res);
-    else if (res.endTime < lhr_psi) resources2.push(res);
-    else if (res.endTime < lhr_interactive) resources3.push(res);
+    if (res.endTime < lhr_observed_fcp) {
+      resources1.push(res);
+      res.startTime = res.startTime * (lhr_fcp/lhr_observed_fcp);
+      res.endTime = res.endTime * (lhr_fcp/lhr_observed_fcp);
+    }
+    else if (res.endTime < lhr_observed_fmp) {
+      resources2.push(res);
+      res.startTime = res.startTime * (lhr_fmp/lhr_observed_fmp);
+      res.endTime = res.endTime * (lhr_fmp/lhr_observed_fmp);
+    }
+    else if (res.endTime * (lhr_fmp/lhr_observed_fmp) < lhr_interactive) {
+      resources3.push(res);
+      res.startTime = res.startTime * (lhr_fmp/lhr_observed_fmp);
+      res.endTime = res.endTime * (lhr_fmp/lhr_observed_fmp);
+    }
     else {
       resources4.push(res);
+      res.startTime = res.startTime * (lhr_fmp/lhr_observed_fmp);
+      res.endTime = res.endTime * (lhr_fmp/lhr_observed_fmp);
       lastResTime = res.endTime;
     }
   }
+
+  // fix screenshot timings as well
+  for (var i = 0; i < lhr_screenshots.length; i++) {
+    var shot = lhr_screenshots[i];
+    if(shot.timing < lhr_fcp) {
+      shot.timing = shot.timing * (lhr_fcp/lhr_observed_fcp);
+    }
+    else {
+      shot.timing = shot.timing * (lhr_fmp/lhr_observed_fmp);
+    }
+  }
+
   var levels = [];
   var level1 = {name: 'First Contentful Paint', resources: resources1, time: lhr_fcp};
-  var level2 = {name: 'Speed Index', resources: resources2, time: lhr_psi};
+  var level2 = {name: 'First Meaningful Paint', resources: resources2, time: lhr_fmp};
   var level3 = {name: 'Interactive', resources: resources3, time: lhr_interactive};
   var level4 = {name: 'Full Load', resources: resources4, time: lastResTime};
   // only add levels with resources in them
@@ -144,19 +175,18 @@ app.get('/gamestate.json', async(request, response) => {
 
   // create some goodies
   var goodies = [];
-  var gameDuration = lhr_network[lhr_network.length-1].startTime;
   var is_pwa = lhr_pwa_score > 0.7;
   // if it's not a full PWA we'll reward the individual features at least
   if(!is_pwa) {
-    addGoodie(goodies, lhr_has_sw, "ServiceWorker registered", "shoot-rate", gameDuration);
-    addGoodie(goodies, lhr_has_a2hs, "Add-To-Homescreen", "extra-life", gameDuration);
-    addGoodie(goodies, lhr_has_offline, "Offline Mode", "extra-life", gameDuration);
+    addGoodie(goodies, lhr_has_sw, "ServiceWorker registered", "shoot-rate", lhr_interactive);
+    addGoodie(goodies, lhr_has_a2hs, "Add-To-Homescreen", "extra-life", lhr_interactive);
+    addGoodie(goodies, lhr_has_offline, "Offline Mode", "extra-life", lhr_interactive);
   }
   else {
-    addGoodie(goodies, is_pwa, "Progressive Web App", "bomb", gameDuration);
+    addGoodie(goodies, is_pwa, "Progressive Web App", "bomb", lhr_interactive);
   }
-  addGoodie(goodies, lhr_has_http2, "HTTP2 enabled", "extra-life", gameDuration);
-  addGoodie(goodies, lhr_has_https, "Page is secure", "shield", gameDuration);
+  addGoodie(goodies, lhr_has_http2, "HTTP2 enabled", "extra-life", lhr_interactive);
+  addGoodie(goodies, lhr_has_https, "Page is secure", "shield", lhr_interactive);
 
 
 
