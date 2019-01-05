@@ -19,6 +19,7 @@ const {URL} = require('url');
 const compression = require('compression')
 const express = require('express');
 const fetch = require('node-fetch');
+const helmet = require('helmet');
 
 // create express server
 const app = express();
@@ -28,6 +29,8 @@ const PSI_REST_API = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed
 
 //enable compression
 app.use(compression())
+// enable some security stuff, especially hsts
+app.use(helmet())
 
 
 // setting up routes for the various files
