@@ -15,7 +15,8 @@
     "express": "^4.16.4",
     "node-fetch": "latest",
     "url": "0.11.x",
-    "compression": "latest"
+    "compression": "latest",
+    "helmet": "latest"
   },
   "engines": {
     "node": "8.x"

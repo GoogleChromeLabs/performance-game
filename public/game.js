@@ -51,12 +51,32 @@ var hints = [
 ];
 // give correct control advice
 // we do not (!!) use user agent here, to accomodate for chrome emulator
-if(navigator.platform==="Android" || navigator.platform==="iOS") {
+if(hasMotionSensor()) {
   hints.push("Keep device leveled to stop ship, tilt for movement, tuch to fire!");
 }
 else {
   hints.push("Control with arrow keys, fire with space, close dialogs with Enter!");
 }
+
+var mobileSettings = {
+  min_asteroid_size: 25,
+  max_asteroid_size: 200,
+  min_asteroid_speed: 15,
+  max_asteroid_speed: 40,
+  max_asteroids_at_once: 5
+}
+
+var desktopSettings = {
+  min_asteroid_size: 35,
+  max_asteroid_size: 300,
+  min_asteroid_speed: 20,
+  max_asteroid_speed: 60,
+  max_asteroids_at_once: 30
+}
+
+var settings;
+if(isMobile()) settings = mobileSettings;
+else settings = desktopSettings;
 
 var urlToPlay; // the url being played
 
@@ -431,16 +451,20 @@ function fireBullet() {
 }
 
 function screenWrap(sprite) {
+  // we'll wrap the ship immediately, the other stuff can be a bit more outside
+  // before we wrap it back
+  var dist = 80;
+  if(sprite === ship) dist = 0;
 
-  if (sprite.x < 0) {
+  if (sprite.x < -dist) {
     sprite.x = game.width;
-  } else if (sprite.x > game.width) {
+  } else if (sprite.x > game.width + dist) {
     sprite.x = 0;
   }
 
-  if (sprite.y < 0) {
+  if (sprite.y < -dist) {
     sprite.y = game.height;
-  } else if (sprite.y > game.height) {
+  } else if (sprite.y > game.height + dist) {
     sprite.y = 0;
   }
 }
@@ -450,13 +474,17 @@ function render() {
 
 
 function generateAsteroids() {
+  // game not initialized or no resources to visualize any more?
   if (!currentLevel || !currentLevel.resources) return;
+  // generate a new asteroid for all resources which are loaded at this point in time
   for (var i = currentLevel.resources.length - 1; i >= 0; i--) {
+    // current max amount of asteroids on the screen?
+    if (asteroids.length >= settings.max_asteroids_at_once) return;
     var item = currentLevel.resources[i];
     if (item.startTime < currentTime) {
       var size = item.transferSize / 1000;
-      size = Math.max(size, 35);
-      size = Math.min(size, 300);
+      size = Math.max(size, settings.min_asteroid_size);
+      size = Math.min(size, settings.max_asteroid_size);
       var rnd = Math.random();
       var c = null;
       var asset_name = 'meteroid_neutral';
@@ -477,7 +505,7 @@ function generateAsteroids() {
       c.health = item.transferSize / 1000; // download size represents health
       // c.body.immovable = true;
       game.physics.enable(c, Phaser.Physics.ARCADE);
-      c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * 60 + 40, 10));
+      c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * (settings.max_asteroid_size - settings.min_asteroid_size) + settings.min_asteroid_size, 10));
       currentLevel.resources.splice(i, 1);
       console.log('Adding asteroid for resource: ' + item);
     }
@@ -485,12 +513,13 @@ function generateAsteroids() {
 }
 
 function createRandomPointOutsideGame() {
+  var dist = 80; // distance to gamefield, we'll create them a bit outside
   var rnd = Math.random();
   var point = {x: 0, y: 0};
-  if (rnd < 0.25) point = {x: -50, y: game.world.randomY};
-  else if (rnd < 0.5) point = {x: game.width + 50, y: game.world.randomY};
-  else if (rnd < 0.75) point = {x: game.world.randomX, y: -50};
-  else point = {x: game.world.randomX, y: game.height + 50};
+  if (rnd < 0.25) point = {x: -dist, y: game.world.randomY};
+  else if (rnd < 0.5) point = {x: game.width + dist, y: game.world.randomY};
+  else if (rnd < 0.75) point = {x: game.world.randomX, y: -dist};
+  else point = {x: game.world.randomX, y: game.height + dist};
   return point;
 }
 
@@ -562,6 +591,14 @@ function endGame(won) {
     'event_category' : 'end',
     'event_label' : won ? "won" : "lost"
   });
+}
+
+function isMobile() {
+  return navigator.appVersion.indexOf("Mobile") >= 0;
+}
+
+function hasMotionSensor() {
+  return navigator.platform === "Android" || navigator.platform === "iOS"
 }
 
 
