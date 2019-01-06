@@ -61,17 +61,19 @@ else {
 var mobileSettings = {
   min_asteroid_size: 25,
   max_asteroid_size: 200,
-  min_asteroid_speed: 15,
-  max_asteroid_speed: 40,
-  max_asteroids_at_once: 5
+  min_asteroid_speed: 10,
+  max_asteroid_speed: 30,
+  max_asteroids_at_once: 5,
+  asteroid_size_threshold: 2000 // in kb, to ignore plain pings
 }
 
 var desktopSettings = {
   min_asteroid_size: 35,
   max_asteroid_size: 300,
-  min_asteroid_speed: 20,
+  min_asteroid_speed: 10,
   max_asteroid_speed: 60,
-  max_asteroids_at_once: 30
+  max_asteroids_at_once: 30,
+  asteroid_size_threshold: 1000 // in kb, to ignore plain pings
 }
 
 var settings;
@@ -194,7 +196,7 @@ function create() {
   screenshot.width = 240;
   screenshot.visible = false;
 
-  // display lives - let's generate 10 to haev buffer for goodies, but only show the ones left
+  // display lives - let's generate 10 to have buffer for goodies, but only show the ones left
   for (var i = 0; i < 10; i++) {
     var top = 5;
     var left = game.width - 40 - i * (heartWidth + 20);
@@ -483,6 +485,11 @@ function generateAsteroids() {
     var item = currentLevel.resources[i];
     if (item.startTime < currentTime) {
       var size = item.transferSize / 1000;
+      // remove too small ones after first paint - just distracting from the real problems
+      if (currentLevel.levelNumber > 1 && size < settings.asteroid_size_threshold) {
+        currentLevel.resources.splice(i, 1);
+        continue;
+      }
       size = Math.max(size, settings.min_asteroid_size);
       size = Math.min(size, settings.max_asteroid_size);
       var rnd = Math.random();
