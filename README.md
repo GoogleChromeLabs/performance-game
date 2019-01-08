@@ -34,24 +34,28 @@ Of course you can! Contributions are always welcome. Please take a look at [CONT
   ```none
   $ npm install 
   ```
-4. Run the game via node
+4. Build the game
+  ```none
+  $ npm run build
+  ```
+5. Run the game 
   ```none
   $ npm run start
   ```
-5. Do your changes, test, repeat
-6. Lint the code via
+6. Do your changes, test, repeat
+7. Lint the code via
   ```none
   $ npm run lint
   ```
-7. Push code back to your fork
+8. Push code back to your fork
 ```none
   $ git add .
   $ git commit -m "update message"
   $ git push
   ```
-8. Create PR from this via UI (see [here](https://help.github.com/articles/creating-a-pull-request-from-a-fork/))
+9. Create PR from this via UI (see [here](https://help.github.com/articles/creating-a-pull-request-from-a-fork/))
 
-9. Deploy
+10. Deploy
 * [Install](https://cloud.google.com/sdk/install) and [set up](https://cloud.google.com/sdk/docs/initializing) Google Cloud SDK as described here
 * Then run the deploy script
   ```none
