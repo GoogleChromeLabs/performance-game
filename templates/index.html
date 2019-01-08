@@ -39,8 +39,8 @@ limitations under the License.
     <meta name="og:video" content="https://perfgame-206511.appspot.com/img/share_animated.jpg" />
     <meta name="theme-color" content="#2196f3"/>
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="material.indigo-pink.min.css">
+    <!-- <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons" /> -->
+    <link rel="stylesheet" type="text/css" href="material.indigo-pink.min.css" />
     <link rel="stylesheet" type="text/css" href="dialog-polyfill.css" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-123358764-1"></script>
     <style>
@@ -48,8 +48,15 @@ limitations under the License.
     	body {
         padding: 0;
         margin: 0;
-        background-image: url("img/background.jpg");
-        background-repeat: repeat;
+        background-color: black;
+        background-size: 600px 600px, 350px 350px, 250px 250px, 150px 150px, 420px 300px;
+        background-image:
+          radial-gradient(rgba(255,255,255,1), rgba(255,255,255,.15) 2px, transparent 10px),
+          radial-gradient(rgba(200,255,255,1), rgba(255,255,255,.2) 3px, transparent 20px),
+          radial-gradient(rgba(255,255,200,1), rgba(255,255,255,.12) 2px, transparent 20px),
+          radial-gradient(rgba(255,255,255,.8), rgba(255,255,255,.1) 3px, transparent 8px),
+          radial-gradient(rgba(255,255,255,.6), rgba(255,255,255,.05) 4px, transparent 5px);
+        background-position: 0 0, 20px 50px, 120px 280px, 60px 110px, 400px 500px;
       }
 
       #noscript {
