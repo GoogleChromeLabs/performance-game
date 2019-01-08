@@ -1,6 +1,11 @@
 #custom
 .data
 
+#build path
+dist/
+*bundle.js
+generated.html
+
 # Logs
 logs
 *.log

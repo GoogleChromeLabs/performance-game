@@ -1,0 +1,201 @@
+<!--
+Copyright 2018 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8" />
+    <title>The Performance Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Performance Game</title>
+    <!-- Search Engine -->
+    <meta name="description" content="Fight slow loading websites!">
+    <meta itemprop="name" content="Performance Game">
+    <meta itemprop="description" content="Fight slow loading websites!">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Performance Game">
+    <meta name="twitter:description" content="Fight slow loading websites!">
+    <meta name="twitter:creator" content="@MartinSchierle">
+    <meta name="twitter:image" content="https://perfgame-206511.appspot.com/img/share_static.jpg" />
+    <meta name="og:title" content="Performance Game">
+    <meta name="og:description" content="Fight slow loading websites!">
+    <meta name="og:url" content="https://g.co/perfgame">
+    <meta name="og:site_name" content="Performance Game">
+    <meta name="og:type" content="website">
+    <meta name="og:image" content="https://perfgame-206511.appspot.com/img/share_static.jpg" />
+    <meta name="og:video" content="https://perfgame-206511.appspot.com/img/share_animated.jpg" />
+    <meta name="theme-color" content="#2196f3"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="material.indigo-pink.min.css">
+    <link rel="stylesheet" type="text/css" href="dialog-polyfill.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-123358764-1"></script>
+    <style>
+
+    	body {
+        padding: 0;
+        margin: 0;
+        background-image: url("img/background.jpg");
+        background-repeat: repeat;
+      }
+
+      #noscript {
+        font-size: 200%;
+        font-style: bold;
+        color: white;
+        width: 100%;
+        text-align: center;
+        margin-top: 300px;
+      }
+
+      #input_error_lbl {
+        color: white;
+      }
+
+
+    	canvas {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+      }
+
+      i {
+          margin-left: 10px;
+      }
+
+      #tablePopupContent {
+        width: 100%;
+        text-align: left;
+      }
+
+     #urlPopupContent {
+       font-size:14pt;
+       color: white;
+       line-height: 150%;
+     }
+
+     #infoPopup, #tablePopup, #gameEndPopup, #urlInputDialog {
+       background-color: #bd6a1d;
+       border-radius: 25px;
+       border: 6px solid #833f00;
+       padding: 20px;
+       text-align: center;
+       max-width: 80%;
+       width: 400px;
+     }
+
+     #infoPopupTitle, #tablePopupTitle, #urlPopupTitle, #gameEndPopupTitle {
+       font-size:20pt;
+       color: white;
+       line-height: 150%;
+     }
+
+     #infoPopupContent, #tablePopupContent, #gameEndPopupContent {
+       font-size:20pt;
+       color: white;
+       line-height: 150%;
+     }
+
+     #install_btn, #share_btn, #replay_btn, #report_btn, #start_btn {
+       color: white;
+       margin: 5px;
+     }
+
+
+    </style>
+</head>
+<body>
+
+<dialog class="mdl-dialog" id="urlInputDialog">
+    <h4 class="mdl-dialog__title" id="urlPopupTitle">The performance game!</h4>
+    <div class="mdl-dialog__content" id="urlPopupContent">
+        Fight slow loading websites, one resource at a time!
+    </div>
+    <form onsubmit="return false;">
+      <div class="mdl-textfield mdl-js-textfield">
+        <input class="mdl-textfield__input"
+               required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+               title="Please enter a valid URL"
+               id="url">
+        <span class="mdl-textfield__error" id="input_error_lbl">URLs only</span>
+        <label class="mdl-textfield__label" for="url">URL to play</label>
+       </div>
+      <div class="mdl-dialog__actions">
+        <button type="button" disabled class="mdl-button" style="background-color:#833f00;" id="start_btn">Play</button>
+      </div>
+    </form>
+  </dialog>
+
+
+  <dialog class="mdl-dialog" id="infoPopup">
+    <div class="mdl-dialog__content">
+      <p id="infoPopupTitle">
+      </p>
+      <p id="infoPopupContent">
+      </p>
+    </div>
+  </dialog>
+
+
+  <dialog class="mdl-dialog" id="tablePopup">
+    <div class="mdl-dialog__content">
+      <p id="tablePopupTitle">
+      </p>
+      <table id = "tablePopupContent">
+      </table>
+    </div>
+  </dialog>
+
+
+  <dialog class="mdl-dialog" id="gameEndPopup">
+    <div class="mdl-dialog__content">
+      <p>
+        <div id="gameEndPopupTitle">
+        </div>
+      </p>
+      <p>
+        <div id = "gameEndPopupContent">
+        </div>
+      </p>
+      <div class="mdl-dialog__actions mdl-dialog__actions--full-width">
+        <button type="button" class="mdl-button" style="background-color:#833f00;" id="replay_btn">
+          Play Again<i class="material-icons">refresh</i>
+        </button>
+        <button type="button" class="mdl-button" style="background-color:#833f00;" id="share_btn">
+          Share<i class="material-icons">share</i>
+        </button>
+        <button type="button" class="mdl-button" style="background-color:#833f00;" id="install_btn">
+          Add to Homescreen<i class="material-icons">system_update</i>
+        </button>
+        <button type="button" class="mdl-button" style="background-color:#833f00;" id="report_btn">
+          Full Perf Report<i class="material-icons">list_alt</i>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <noscript>
+    <div id="noscript">
+      To play this game, please enable Javascript!
+    </div>
+  </noscript>
+
+
+
+</body>
+</html>

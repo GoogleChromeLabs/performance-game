@@ -16,6 +16,7 @@ limitations under the License.
 'use strict';
 
 const {URL} = require('url');
+const path = require('path')
 const compression = require('compression')
 const express = require('express');
 const fetch = require('node-fetch');
@@ -35,6 +36,14 @@ app.use(helmet())
 
 // setting up routes for the various files
 app.use(express.static('public'));
+
+// index.html is generated, so we changed the name to make this clear into generated.Html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/generated.html'));
+})
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/generated.html'));
+})
 
 
 // this is the main hook. It will open puppeteer, load the URL and grab performance metrics and log resource loading
