@@ -60,7 +60,8 @@ module.exports = {
       defaultAttribute: 'async'
     }),
      new Critters({
-       // optional configuration (see below)
+       fonts: true,
+       preload: "swap"
      })
   ]
 }

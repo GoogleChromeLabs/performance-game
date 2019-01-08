@@ -39,6 +39,17 @@ if ('serviceWorker' in navigator) {
    });
 }
 
+/**
+* Function to inject css async for Performance
+* in general we use critters for that, but this seems to fail for one file
+*/
+function injectCSS(url) {
+  var myCSS = document.createElement( "link" );
+  myCSS.rel = "stylesheet";
+  myCSS.href = url;
+  document.head.insertBefore( myCSS, document.head.childNodes[ document.head.childNodes.length - 1 ].nextSibling );
+}
+
 function prepareEndDialog() {
   if (navigator.share) {
     document.getElementById("share_btn").style.display = "inline-block";
@@ -126,6 +137,9 @@ function share() {
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
+
+  injectCSS("https://fonts.googleapis.com/icon?family=Material+Icons");
+
   // only use polyfill if needed
   if (typeof HTMLDialogElement != 'function') {
     dialogPolyfill.registerDialog(document.getElementById("urlInputDialog"));
@@ -170,7 +184,6 @@ function preload() {
   game.load.image('pwa_logo', 'img/pwa_logo.png');
   game.load.image('sw_logo', 'img/sw_logo.png');
   game.load.image('explosion_particle', 'img/explosion_particle.png');
-  game.load.image('background', 'img/background.jpg');
 }
 
 var hints = [
@@ -264,7 +277,7 @@ function getGamestateAndStart() {
     // this one is a bit tricky, as phaser is loade deferred.
     // But creating the gameplay on server takes that long, that we can be sure it's loaded at this point
     game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, 'myCanvas',
-      { preload: preload, create: create, update: update, render: render });
+      { preload: preload, create: create, update: update, render: render }, true);
     if (response.ok) {
       console.log('success');
       return response.json();
@@ -293,7 +306,7 @@ function create() {
   game.renderer.roundPixels = true;
 
   //  A nice background
-  game.add.tileSprite(0, 0, game.width, game.height, 'background');
+  //game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
   //  We need arcade physics
   game.physics.startSystem(Phaser.Physics.ARCADE);
