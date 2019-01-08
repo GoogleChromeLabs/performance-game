@@ -17,7 +17,142 @@ limitations under the License.
 
 'use strict';
 
+require('dialog-polyfill')
+
 var game;
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'UA-123358764-1', { 'anonymize_ip': true });
+
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+if ('serviceWorker' in navigator) {
+   window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+   });
+}
+
+function prepareEndDialog() {
+  if (navigator.share) {
+    document.getElementById("share_btn").style.display = "inline-block";
+  }
+  else {
+    document.getElementById("share_btn").style.display = "none";
+    console.log("Weh Share unavailable, hiding sharing option!");
+  }
+  if (deferredPrompt) {
+    document.getElementById("install_btn").style.display = "inline-block";
+    document.getElementById("install_btn").onclick = function() {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice
+        .then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            gtag('event', 'a2hs', {
+              'event_category' : 'installed',
+            });
+          } else {
+            gtag('event', 'a2hs', {
+              'event_category' : 'aborted',
+            });
+          }
+          deferredPrompt = null;
+        });
+    }
+  }
+  else {
+    document.getElementById("install_btn").style.display = "none";
+    console.log("Web Share unavailable, hiding sharing option!");
+  }
+}
+
+function getInputURL() {
+  var u = document.getElementById('url').value;
+  if(u.indexOf("http") != 0) {
+    u = "http://" + u;
+  }
+  return u;
+}
+
+
+function startGame() {
+  var url = getInputURL();
+  var hostname = (new URL(url)).hostname;
+  gtag('event', 'game', {
+    'event_category' : 'start',
+    'event_label' : hostname
+  });
+  document.getElementById('urlInputDialog').close();
+  getGamestateAndStart();
+}
+
+/**
+* Route the user towards a full performance report on PSI domain
+**/
+function seeReport() {
+  var url = getInputURL();
+  var report_url = "https://developers.google.com/speed/pagespeed/insights/?url=" + encodeURI(url);
+  window.open(report_url, '_blank');
+}
+
+function share() {
+  if (navigator.share) {
+    navigator.share({
+        title: "The Performance Game",
+        text: "I am fighting slow loading websites - are you too? #perfmatters #perfgame",
+        url: "https://g.co/perfgame",
+    })
+      .then(() => {
+        console.log('Successful share');
+        gtag('event', 'share', {
+          'event_category' : 'success',
+          'event_label' : ''
+        });
+      })
+      .catch((error) => {
+        console.log('Error sharing', error);
+        gtag('event', 'share', {
+          'event_category' : 'error',
+          'event_label' : error.message
+        });
+      });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+  // only use polyfill if needed
+  if (typeof HTMLDialogElement != 'function') {
+    dialogPolyfill.registerDialog(document.getElementById("urlInputDialog"));
+    dialogPolyfill.registerDialog(document.getElementById("infoPopup"));
+    dialogPolyfill.registerDialog(document.getElementById("tablePopup"));
+    dialogPolyfill.registerDialog(document.getElementById("gameEndPopup"));
+  }
+   var elem = document.getElementById("url");
+   var btn = document.getElementById("start_btn");
+   btn.onclick = startGame;
+   // enable disble button depending on if input is valid
+   elem.oninput = function(e) {
+     btn.disabled = !elem.validity.valid;
+     btn.style.color = elem.validity.valid ? "#ffffff" : "#666666";
+   }
+   // enter on input triggers button
+   elem.addEventListener("keyup", function(e){
+     if(e.keyCode === 13)
+     startGame();
+   });
+
+   document.getElementById("replay_btn").onclick = function() {document.location.href='/';};
+   document.getElementById("share_btn").onclick = share;
+   document.getElementById("report_btn").onclick = seeReport;
+
+   document.getElementById('urlInputDialog').showModal();
+});
 
 function preload() {
   game.load.crossOrigin = 'Anonymous';
@@ -64,7 +199,7 @@ var mobileSettings = {
   min_asteroid_speed: 10,
   max_asteroid_speed: 30,
   max_asteroids_at_once: 5,
-  asteroid_size_threshold: 2000 // in kb, to ignore plain pings
+  asteroid_size_threshold: 2 // in kb, to ignore plain pings
 }
 
 var desktopSettings = {
@@ -73,7 +208,7 @@ var desktopSettings = {
   min_asteroid_speed: 10,
   max_asteroid_speed: 60,
   max_asteroids_at_once: 30,
-  asteroid_size_threshold: 1000 // in kb, to ignore plain pings
+  asteroid_size_threshold: 1 // in kb, to ignore plain pings
 }
 
 var settings;
