@@ -18,216 +18,13 @@ limitations under the License.
 'use strict';
 
 require('dialog-polyfill')
+const commons = require('./common.js')
+const settings_module = require('./settings.js')
+const dialogs = require('./dialogs.js')
 
 var game;
 
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'UA-123358764-1', { 'anonymize_ip': true });
-
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-});
-
-if ('serviceWorker' in navigator) {
-   window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
-   });
-}
-
-/**
-* Function to inject css async for Performance
-* in general we use critters for that, but this seems to fail for one file
-*/
-function injectCSS(url) {
-  var myCSS = document.createElement( "link" );
-  myCSS.rel = "stylesheet";
-  myCSS.href = url;
-  document.head.insertBefore( myCSS, document.head.childNodes[ document.head.childNodes.length - 1 ].nextSibling );
-}
-
-function prepareEndDialog() {
-  if (navigator.share) {
-    document.getElementById("share_btn").style.display = "inline-block";
-  }
-  else {
-    document.getElementById("share_btn").style.display = "none";
-    console.log("Weh Share unavailable, hiding sharing option!");
-  }
-  if (deferredPrompt) {
-    document.getElementById("install_btn").style.display = "inline-block";
-    document.getElementById("install_btn").onclick = function() {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice
-        .then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            gtag('event', 'a2hs', {
-              'event_category' : 'installed',
-            });
-          } else {
-            gtag('event', 'a2hs', {
-              'event_category' : 'aborted',
-            });
-          }
-          deferredPrompt = null;
-        });
-    }
-  }
-  else {
-    document.getElementById("install_btn").style.display = "none";
-    console.log("Web Share unavailable, hiding sharing option!");
-  }
-}
-
-function getInputURL() {
-  var u = document.getElementById('url').value;
-  if(u.indexOf("http") != 0) {
-    u = "http://" + u;
-  }
-  return u;
-}
-
-
-function startGame() {
-  var url = getInputURL();
-  var hostname = (new URL(url)).hostname;
-  gtag('event', 'game', {
-    'event_category' : 'start',
-    'event_label' : hostname
-  });
-  document.getElementById('urlInputDialog').close();
-  getGamestateAndStart();
-}
-
-/**
-* Route the user towards a full performance report on PSI domain
-**/
-function seeReport() {
-  var url = getInputURL();
-  var report_url = "https://developers.google.com/speed/pagespeed/insights/?url=" + encodeURI(url);
-  window.open(report_url, '_blank');
-}
-
-function share() {
-  if (navigator.share) {
-    navigator.share({
-        title: "The Performance Game",
-        text: "I am fighting slow loading websites - are you too? #perfmatters #perfgame",
-        url: "https://g.co/perfgame",
-    })
-      .then(() => {
-        console.log('Successful share');
-        gtag('event', 'share', {
-          'event_category' : 'success',
-          'event_label' : ''
-        });
-      })
-      .catch((error) => {
-        console.log('Error sharing', error);
-        gtag('event', 'share', {
-          'event_category' : 'error',
-          'event_label' : error.message
-        });
-      });
-  }
-}
-
-document.addEventListener("DOMContentLoaded", function(event) {
-
-  injectCSS("https://fonts.googleapis.com/icon?family=Material+Icons");
-
-  // only use polyfill if needed
-  if (typeof HTMLDialogElement != 'function') {
-    dialogPolyfill.registerDialog(document.getElementById("urlInputDialog"));
-    dialogPolyfill.registerDialog(document.getElementById("infoPopup"));
-    dialogPolyfill.registerDialog(document.getElementById("tablePopup"));
-    dialogPolyfill.registerDialog(document.getElementById("gameEndPopup"));
-  }
-   var elem = document.getElementById("url");
-   var btn = document.getElementById("start_btn");
-   btn.onclick = startGame;
-   // enable disble button depending on if input is valid
-   elem.oninput = function(e) {
-     btn.disabled = !elem.validity.valid;
-     btn.style.color = elem.validity.valid ? "#ffffff" : "#666666";
-   }
-   // enter on input triggers button
-   elem.addEventListener("keyup", function(e){
-     if(e.keyCode === 13)
-     startGame();
-   });
-
-   document.getElementById("replay_btn").onclick = function() {document.location.href='/';};
-   document.getElementById("share_btn").onclick = share;
-   document.getElementById("report_btn").onclick = seeReport;
-
-   document.getElementById('urlInputDialog').showModal();
-});
-
-function preload() {
-  game.load.crossOrigin = 'Anonymous';
-  game.load.image('meteroid_green', 'img/asteroid_green.png');
-  game.load.image('meteroid_red', 'img/asteroid_red.png');
-  game.load.image('meteroid_neutral', 'img/asteroid_neutral.png');
-  game.load.image('meteroid_orange', 'img/asteroid_orange.png');
-  game.load.image('bullet', 'img/bullets.png');
-  game.load.image('ship', 'img/ship.png');
-  game.load.image('heart', 'img/heart.png');
-  game.load.image('popupBg', 'img/popup.png');
-  game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
-  game.load.image('shield_powerup', 'img/shield_powerup.png');
-  game.load.image('ship_shielded', 'img/ship_shielded.png');
-  game.load.image('pwa_logo', 'img/pwa_logo.png');
-  game.load.image('sw_logo', 'img/sw_logo.png');
-  game.load.image('explosion_particle', 'img/explosion_particle.png');
-}
-
-var hints = [
-  'Every asteroid represents one loaded resource.',
-  'Every shot represents a 10kb download.',
-  'An orange asteroid means more than 50% of the resource is unused',
-  'A red asteroid means more than 50% of the resource is used',
-  'A green asteroid means more than 85% of the resource is used',
-  'An active service worker gives faster fire rate',
-  'Active HTTPS will give you a shield.',
-  '52% of users abandon a site which loads longer than 3s',
-  'A well-built PWA gives you a powerup to destroy all asteroids at once',
-];
-// give correct control advice
-// we do not (!!) use user agent here, to accomodate for chrome emulator
-if(hasMotionSensor()) {
-  hints.push("Keep device leveled to stop ship, tilt for movement, tuch to fire!");
-}
-else {
-  hints.push("Control with arrow keys, fire with space, close dialogs with Enter!");
-}
-
-var mobileSettings = {
-  min_asteroid_size: 25,
-  max_asteroid_size: 200,
-  min_asteroid_speed: 10,
-  max_asteroid_speed: 30,
-  max_asteroids_at_once: 5,
-  asteroid_size_threshold: 2 // in kb, to ignore plain pings
-}
-
-var desktopSettings = {
-  min_asteroid_size: 35,
-  max_asteroid_size: 300,
-  min_asteroid_speed: 10,
-  max_asteroid_speed: 60,
-  max_asteroids_at_once: 30,
-  asteroid_size_threshold: 1 // in kb, to ignore plain pings
-}
-
-var settings;
-if(isMobile()) settings = mobileSettings;
-else settings = desktopSettings;
-
+var settings = settings_module.settings;
 var urlToPlay; // the url being played
 
 var showLoadingText = true; // will laternatie between 'loading' and hints
@@ -262,22 +59,51 @@ var hitEmitter;
 var explosionEmitter;
 
 var dialogOpened; // timestamp to remember when a dialog was opened, we'll disalow closing for like 2s
+var deferredPrompt;
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'UA-123358764-1', { 'anonymize_ip': true });
+
+
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+if ('serviceWorker' in navigator) {
+   window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+   });
+}
+
+dialogs.setupDialogs(startGame);
+
+
+function startGame() {
+  var url = commons.getInputURL();
+  var hostname = (new URL(url)).hostname;
+  gtag('event', 'game', {
+    'event_category' : 'start',
+    'event_label' : hostname
+  });
+  document.getElementById('urlInputDialog').close();
+  getGamestateAndStart();
+}
 
 function getGamestateAndStart() {
   //show loading popup
-  showInfoPopup('Loading Game...');
-  hintInterval = setInterval(function() {
-    if (showLoadingText) showInfoPopup('Loading Game...');
-    else showInfoPopup(hints[parseInt(Math.random() * hints.length, 10)]);
-    showLoadingText = !showLoadingText;
-  }, 4000);
+  dialogs.showLoadingPopup(game, 'Loading Game...', hints);
   // get gamestate from server to start game
-  urlToPlay = getInputURL();
+  urlToPlay = commons.getInputURL();
   fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origin'}).then(function(response) {
     // this one is a bit tricky, as phaser is loade deferred.
     // But creating the gameplay on server takes that long, that we can be sure it's loaded at this point
     game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, 'myCanvas',
       { preload: preload, create: create, update: update, render: render }, true);
+    dialogs.setGame(game);
     if (response.ok) {
       console.log('success');
       return response.json();
@@ -290,13 +116,52 @@ function getGamestateAndStart() {
     levels = JSON.parse(JSON.stringify(gamestate.levels)); // we'll manipulate that later on, so we'll use a copy
     currentLevel = levels.shift();
     clearInterval(hintInterval);
-    showInfoPopup("Level " + currentLevel.levelNumber + "<br>" + currentLevel.name, "");
+    dialogs.closeLoadingPopup(); // close the loading popup
+    dialogs.showInfoPopup(game, "Level " + currentLevel.levelNumber + "<br>" + currentLevel.name, "");
   }).catch(function(error) {
     clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
     console.trace(error);
-    showInfoPopup("Sorry, we couldn't load this URL right now. Please try a different URL, or come back later.");
+    dialogs.showInfoPopup(game, "Sorry, we couldn't load this URL right now. Please try a different URL, or come back later.");
   });
+}
+
+function preload() {
+  game.load.crossOrigin = 'Anonymous';
+  game.load.image('asteroid_green', 'img/asteroid_green.png');
+  game.load.image('asteroid_red', 'img/asteroid_red.png');
+  game.load.image('asteroid_neutral', 'img/asteroid_neutral.png');
+  game.load.image('asteroid_orange', 'img/asteroid_orange.png');
+  game.load.image('bullet', 'img/bullets.png');
+  game.load.image('ship', 'img/ship.png');
+  game.load.image('heart', 'img/heart.png');
+  game.load.image('popupBg', 'img/popup.png');
+  game.load.image('screenshot', 'img/popup.png'); // placeholder image for now, will be replaced later in game with real image from backend
+  game.load.image('shield_powerup', 'img/shield_powerup.png');
+  game.load.image('ship_shielded', 'img/ship_shielded.png');
+  game.load.image('pwa_logo', 'img/pwa_logo.png');
+  game.load.image('sw_logo', 'img/sw_logo.png');
+  game.load.image('explosion_particle', 'img/explosion_particle.png');
+}
+
+var hints = [
+  'Every asteroid represents one loaded resource.',
+  'Every shot represents a 10kb download.',
+  'A red asteroid means less than 50% of the resource is used',
+  'An orange asteroid means less than 85% of the resource is used',
+  'A green asteroid means more than 85% of the resource is used',
+  'An active service worker gives faster fire rate',
+  'Active HTTPS will give you a shield.',
+  '52% of users abandon a site which loads longer than 3s',
+  'A well-built PWA gives you a powerup to destroy all asteroids at once',
+];
+// give correct control advice
+// we do not (!!) use user agent here, to accomodate for chrome emulator
+if(commons.hasMotionSensor()) {
+  hints.push("Keep device leveled to stop ship, tilt for movement, tuch to fire!");
+}
+else {
+  hints.push("Control with arrow keys, fire with space, close dialogs with Enter!");
 }
 
 function create() {
@@ -367,7 +232,7 @@ function create() {
 
   // emitter  for particles when a asteroid is hit
   hitEmitter = game.add.emitter(0, 0, 50);
-  hitEmitter.makeParticles('meteroid_neutral');
+  hitEmitter.makeParticles('asteroid_neutral');
   hitEmitter.gravity = 0;
   hitEmitter.maxParticleScale = 0.1;
   hitEmitter.minParticleScale = 0.05;
@@ -379,11 +244,8 @@ function create() {
   explosionEmitter.gravity = 0;
   explosionEmitter.setAlpha(0, 0.1);
 
-  var keyEnter = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-  keyEnter.onDown.add(closePopups, this);
   document.body.addEventListener("touchend", function() {
-    if(game.paused) closePopups();
-    else fireBullet();
+    if(!game.paused) fireBullet();
   }, false);
 
   // motion info
@@ -512,11 +374,11 @@ function update() {
       endGame(true);
     } else {
       var values = [["Load Time", (lastLevel.time/1000).toFixed(1) + "s"],
-                    ["Resources loaded", lastLevel.resourcesCount],
-                    ["KB Downloaded", parseInt(lastLevel.totalSize/1024)],
+                    ["Resources", lastLevel.resourcesCount],
+                    ["KB Loaded", parseInt(lastLevel.totalSize/1024)],
                     ["KB Wasted", parseInt(lastLevel.wastedSize/1024)],
                     ["JS Bootup", (lastLevel.bootupTime/1000).toFixed(1) + "s"]];
-      showDetailsPopup("Level " + lastLevel.levelNumber + "<br>" + lastLevel.name + " finished!", values);
+      dialogs.showDetailsPopup(game, "Level " + lastLevel.levelNumber + "<br>" + lastLevel.name + " finished!", values);
     }
   } else if (levels.length === 0 && currentLevel.resources.length === 0 && asteroids.length === 0 && ship.health > 0) {
     // was the game won?
@@ -541,8 +403,11 @@ function update() {
 var closePopups = function() {
   if(!gamestate) return;  // game didn't start yet
   if(Date.now() - dialogOpened < 1500) return; // dialog just opened
-  if(isDetailsPopupShowing()) closeDetailsPopup();
-  else closeInfoPopup();
+  if(dialogs.isDetailsPopupShowing()) {
+    dialogs.closeDetailsPopup();
+    showInfoPopup("Level " + currentLevel.levelNumber + " " + currentLevel.name);
+  }
+  else dialogs.closeInfoPopup();
 };
 
 //  Called if the bullet hits one of the veg sprites
@@ -642,10 +507,10 @@ function generateAsteroids() {
       size = Math.min(size, settings.max_asteroid_size);
       var rnd = Math.random();
       var c = null;
-      var asset_name = 'meteroid_neutral';
-      if (item.coverage && item.coverage > 85) asset_name = 'meteroid_green';
-      else if (item.coverage && item.coverage > 50) asset_name = 'meteroid_red';
-      else if (item.coverage && item.coverage > 0) asset_name = 'meteroid_orange';
+      var asset_name = 'asteroid_neutral';
+      if (item.coverage && item.coverage > 85) asset_name = 'asteroid_green';
+      else if (item.coverage && item.coverage > 50) asset_name = 'asteroid_orange';
+      else if (item.coverage && item.coverage > 0) asset_name = 'asteroid_red';
       // position new asteroids on random point outside game
       var point = createRandomPointOutsideGame();
       c = asteroids.create(point.x, point.y, asset_name);
@@ -660,7 +525,7 @@ function generateAsteroids() {
       c.health = item.transferSize / 1000; // download size represents health
       // c.body.immovable = true;
       game.physics.enable(c, Phaser.Physics.ARCADE);
-      c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * (settings.max_asteroid_size - settings.min_asteroid_size) + settings.min_asteroid_size, 10));
+      c.rotation = game.physics.arcade.moveToXY(c, game.world.randomX, game.world.randomY, parseInt(Math.random() * (settings.max_asteroid_speed - settings.min_asteroid_speed) + settings.min_asteroid_speed, 10));
       currentLevel.resources.splice(i, 1);
       console.log('Adding asteroid for resource: ' + item);
     }
@@ -733,88 +598,11 @@ function shipHit(ship, asteroid) {
   }
 }
 
-
-function getUrlParam(key) {
-  var match = window.location.href.match('[?&]' + key + '=([^&#]+)');
-  return match ? match[1] : null;
-}
-
 function endGame(won) {
   gameOver = true;
-  showGameEndPopup(won);
+  dialogs.showGameEndPopup(game, deferredPrompt, won);
   gtag('event', 'game', {
     'event_category' : 'end',
     'event_label' : won ? "won" : "lost"
   });
-}
-
-function isMobile() {
-  return navigator.appVersion.indexOf("Mobile") >= 0;
-}
-
-function hasMotionSensor() {
-  return navigator.platform === "Android" || navigator.platform === "iOS"
-}
-
-
-// ------------------ popup handling -----------------------
-
-function showInfoPopup(title, text='') {
-  if(!text) text = '';
-  document.getElementById("infoPopupTitle").innerHTML = title;
-  document.getElementById("infoPopupContent").innerHTML = text;
-  var popup = document.getElementById("infoPopup");
-  if(!popup.open) {
-    popup.showModal();
-    dialogOpened = Date.now();
-  }
-  if(game && game.isBooted) game.paused = true;
-}
-
-function closeInfoPopup() {
-  document.getElementById("infoPopup").close();
-  game.paused = false;
-}
-
-function showDetailsPopup(title, values) {
-  document.getElementById("tablePopupTitle").innerHTML = title;
-  var tbl = document.getElementById("tablePopupContent");
-  tbl.innerHTML = "";
-  for(var i = 0; i < values.length; i++) {
-    var row = tbl.insertRow();
-    row.insertCell().innerText = values[i][0];
-    row.insertCell().innerText = values[i][1];
-  }
-  var popup = document.getElementById("tablePopup");
-  if(!popup.open) {
-    popup.showModal();
-    dialogOpened = Date.now();
-  }
-  game.paused = true;
-}
-
-function closeDetailsPopup() {
-  document.getElementById("tablePopup").close();
-  game.paused = false;
-  // we show this only at level end, so when this dialog closes we open
-  // the dialog which announces the next level
-  showInfoPopup("Level " + currentLevel.levelNumber + " " + currentLevel.name);
-}
-
-function isDetailsPopupShowing() {
-  return document.getElementById("tablePopup").open;
-}
-
-function showGameEndPopup(won) {
-  prepareEndDialog();
-  var title = document.getElementById("gameEndPopupTitle");
-  if (!won) title.innerHTML = "You have lost the game!";
-  else title.innerHTML = "You won the game!";
-
-  var popup = document.getElementById("gameEndPopup");
-  if(!popup.open) {
-    popup.showModal();
-    dialogOpened = Date.now();
-  }
-  game.paused = true;
 }
