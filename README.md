@@ -1,6 +1,11 @@
 # The Performance Game
 There are many excellent tools, metrics and docs regarding page speed, but these often only appeal to a specific audience - basically people already in the mindset anyway. And even for those the material can be sometimes confusing, boring or just too much. This project aims at visualizing key metrics and problems with the loading of a page in a fun and engaging way - as a game. Idea is to educate people about site load speed through gamification, and also encourage sharing of the game (and therefore page speed ideas and resources) through game leaderboards.
 
+An early beta is live and can be tried here: 
+
+[g.co/perfgame](g.co/perfgame):
+
+
 
 # Game Overview
  This project uses bases on a well-known traditional game, and uses obstacles to represent loading of resources. Player controls a spaceship and has to destroy incoming asteroids, representing loaded resources of the page. Key aspects of the game:
