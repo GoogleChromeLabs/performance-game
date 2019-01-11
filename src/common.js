@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+'use strict';
+
 module.exports.isMobile = isMobile;
 module.exports.getInputURL = getInputURL;
 module.exports.seeReport = seeReport;
@@ -29,17 +31,17 @@ module.exports.injectCSS = injectCSS;
 * in general we use critters for that, but this seems to fail for one file
 */
 function injectCSS(url) {
-  var myCSS = document.createElement( "link" );
-  myCSS.rel = "stylesheet";
+  var myCSS = document.createElement('link');
+  myCSS.rel = 'stylesheet';
   myCSS.href = url;
-  document.head.insertBefore( myCSS, document.head.childNodes[ document.head.childNodes.length - 1 ].nextSibling );
+  document.head.insertBefore(myCSS, document.head.childNodes[ document.head.childNodes.length - 1 ].nextSibling);
 }
 
 
 function getInputURL() {
   var u = document.getElementById('url').value;
-  if(u.indexOf("http") != 0) {
-    u = "http://" + u;
+  if (u.indexOf('http') !== 0) {
+    u = 'http://' + u;
   }
   return u;
 }
@@ -50,7 +52,7 @@ function getInputURL() {
 **/
 function seeReport() {
   var url = getInputURL();
-  var report_url = "https://developers.google.com/speed/pagespeed/insights/?url=" + encodeURI(url);
+  var report_url = 'https://developers.google.com/speed/pagespeed/insights/?url=' + encodeURI(url);
   window.open(report_url, '_blank');
 }
 
@@ -58,22 +60,22 @@ function seeReport() {
 function share() {
   if (navigator.share) {
     navigator.share({
-        title: "The Performance Game",
-        text: "I am fighting slow loading websites - are you too? #perfmatters #perfgame",
-        url: "https://g.co/perfgame",
+      title: 'The Performance Game',
+      text: 'I am fighting slow loading websites - are you too? #perfmatters #perfgame',
+      url: 'https://g.co/perfgame',
     })
       .then(() => {
         console.log('Successful share');
         gtag('event', 'share', {
-          'event_category' : 'success',
-          'event_label' : ''
+          event_category: 'success',
+          event_label: '',
         });
       })
       .catch((error) => {
         console.log('Error sharing', error);
         gtag('event', 'share', {
-          'event_category' : 'error',
-          'event_label' : error.message
+          event_category: 'error',
+          event_label: error.message,
         });
       });
   }
@@ -85,9 +87,9 @@ function getUrlParam(key) {
 }
 
 function isMobile() {
-  return navigator.appVersion.indexOf("Mobile") >= 0;
+  return navigator.appVersion.indexOf('Mobile') >= 0;
 }
 
 function hasMotionSensor() {
-  return navigator.platform === "Android" || navigator.platform === "iOS"
+  return navigator.platform === 'Android' || navigator.platform === 'iOS';
 }

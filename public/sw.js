@@ -9,5 +9,5 @@ workbox.routing.registerRoute(
 
 workbox.routing.registerRoute(
   new RegExp('.*'),
-  workbox.strategies.networkFirst({"networkTimeoutSeconds": 1})
+  workbox.strategies.networkFirst({networkTimeoutSeconds: 1})
 );

@@ -14,54 +14,59 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const path = require('path')
-const webpack = require('webpack');
+'use strict';
+
+const path = require('path');
 const Critters = require('critters-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin');
 
 var phaserModule = path.join(__dirname, '/node_modules/phaser/');
-var phaser = path.join(phaserModule, 'build/custom/phaser-split.js'),
-  pixi = path.join(phaserModule, 'build/custom/pixi.js'),
-  p2 = path.join(phaserModule, 'build/custom/p2.js');
+var phaser = path.join(phaserModule, 'build/custom/phaser-split.js');
+
+
+var pixi = path.join(phaserModule, 'build/custom/pixi.js');
+
+
+var p2 = path.join(phaserModule, 'build/custom/p2.js');
 
 module.exports = {
   entry: {
     main: './src/game.js',
-    deferred: './src/deferred.js'
+    deferred: './src/deferred.js',
   },
   output: {
     filename: '[name].bundle.js',
-    path: path.resolve(__dirname, 'public')
+    path: path.resolve(__dirname, 'public'),
   },
   module: {
-      rules: [
-          { test: /pixi.js/, use: "script-loader" },
-          { test: /p2.js/, use: "script-loader" },
-          { test: /dialog-polyfill.js/, use: "script-loader" },
-          { test: /phaser-split\.js$/, use: ['expose-loader?Phaser'] },
-      ]
+    rules: [
+      { test: /pixi.js/, use: 'script-loader' },
+      { test: /p2.js/, use: 'script-loader' },
+      { test: /dialog-polyfill.js/, use: 'script-loader' },
+      { test: /phaser-split\.js$/, use: ['expose-loader?Phaser'] },
+    ],
   },
   resolve: {
-      alias: {
-          'phaser': phaser,
-          'pixi.js': pixi,
-          'p2': p2,
-      }
+    alias: {
+      phaser: phaser,
+      'pixi.js': pixi,
+      p2: p2,
+    },
   },
   plugins: [
     new HtmlWebpackPlugin({
-        filename: 'generated.html',
-        template: 'templates/index.html',
-        chunksSortMode: 'none'
+      filename: 'generated.html',
+      template: 'templates/index.html',
+      chunksSortMode: 'none',
     }),
     new ScriptExtHtmlWebpackPlugin({
       sync: 'main.bundle.js',
-      defaultAttribute: 'async'
+      defaultAttribute: 'async',
     }),
-     new Critters({
-       fonts: true,
-       preload: "swap"
-     })
-  ]
-}
+    new Critters({
+      fonts: true,
+      preload: 'swap',
+    }),
+  ],
+};
