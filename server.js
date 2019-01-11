@@ -82,11 +82,6 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_interactive = lhr.audits.metrics.details.items[0].interactive;
   var lhr_screenshots = lhr.audits['screenshot-thumbnails'] && lhr.audits['screenshot-thumbnails'].details ? lhr.audits['screenshot-thumbnails'].details.items : [];
   var lhr_network = lhr.audits['network-requests'].details.items;
-  var lhr_unused_css = lhr.audits['unused-css-rules'] ? lhr.audits['unused-css-rules'].details.items : [];
-  var lhr_optimized_images = lhr.audits['uses-optimized-images'].details.items;
-  var lhr_responsive_images = lhr.audits['uses-responsive-images'].details.items;
-  var lhr_offscreen_images = lhr.audits['offscreen-images'] && lhr.audits['offscreen-images'].details ? lhr.audits['offscreen-images'].details.items : [];
-  var lhr_uses_webp = lhr.audits['uses-webp-images'].details.items;
   var lhr_perf_score = lhr.categories.performance.score;
   var lhr_pwa_score = lhr.categories.pwa.score;
   var lhr_has_sw = lhr.audits['service-worker'].rawValue;
@@ -94,10 +89,9 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_has_http2 = lhr.audits['uses-http2'] ? lhr.audits['uses-http2'].rawValue: false;
   var lhr_has_https = lhr.audits['is-on-https'].rawValue;
   var lhr_has_offline = lhr.audits['works-offline'].rawValue;
-  var lhr_unused_js = lhr.audits['unused-javascript'] ? lhr.audits['unused-javascript'].details.items : [];
   var lhr_bootup_time = lhr.audits['bootup-time'] && lhr.audits['bootup-time'].details ? lhr.audits['bootup-time'].details.items : [];
 
-  // for efficiency let's move the bootup time from list into a has, indexed by url
+  // for efficiency let's move the bootup time from list into a hash, indexed by url
   var bootupHash = [];
   for (var i = 0; i < lhr_bootup_time.length; i++) {
     var item = lhr_bootup_time[i];
@@ -105,13 +99,7 @@ app.get('/gamestate.json', async(request, response) => {
   }
 
   // merge several of the byteefficiency audits in a general 'wasted' hashmap
-  var wasted = {};
-  addToWasted(lhr_unused_css, wasted, 'unused-css');
-  addToWasted(lhr_optimized_images, wasted, 'optimized-images');
-  addToWasted(lhr_uses_webp, wasted, 'optimized-images');
-  addToWasted(lhr_responsive_images, wasted, 'optimized-images');
-  addToWasted(lhr_offscreen_images, wasted, 'offscreen-images');
-  addToWasted(lhr_unused_js, wasted, 'unused-javascript');
+  var wasted = getWasted(lhr.audits);
 
   console.log('Lighthouse  finished, fcp: ' + lhr_fcp + ' - FMP: ' + lhr_fmp + ' - TTI: ' + lhr_interactive);
   console.log('Lighthouse  observed, fcp: ' + lhr_observed_fcp + ' - FMP: ' + lhr_observed_fmp + ' - TTI: ' + lhr_interactive);
@@ -246,22 +234,30 @@ function addGoodie(goodies, flag, name, goodieToGive, gameDuration) {
   }
 }
 
-function addToWasted(auditItems, wastedList, auditName) {
-  for (var i = 0; i < auditItems.length; i++) {
-    var item = auditItems[i];
-    if (!wastedList[item.url]) wastedList[item.url] = {coverage: -1}; // -1 for unknown
-    var newCoverage;
-    if (item.wastedPercent) {
-      newCoverage = 100 - item.wastedPercent;
-    } else {
-      newCoverage = 100 - item.wastedBytes * 100 / item.totalBytes;
+function getWasted(audits) {
+  var wastedList = {};
+  for (var name in audits) {
+    var audit = audits[name];
+    if(!audit.details) continue;
+    if(!audit.details.items) continue;
+    var items = audit.details.items;
+    for(var j = 0; j < items.length; j++) {
+      var item = items[j];
+      if (!wastedList[item.url]) wastedList[item.url] = {coverage: -1}; // -1 for unknown
+      var newCoverage;
+      if (item.wastedPercent) {
+        newCoverage = 100 - item.wastedPercent;
+      } else if(item.wastedBytes) {
+        newCoverage = 100 - item.wastedBytes * 100 / item.totalBytes;
+      } else continue;
+      var oldCoverage = wastedList[item.url].coverage;
+      if (oldCoverage !== -1 && newCoverage > oldCoverage) continue;
+      wastedList[item.url].coverage = newCoverage;
+      wastedList[item.url].type = name;
+      wastedList[item.url].wastedSize = parseInt(item.totalBytes - (newCoverage/100)*item.totalBytes); // in kb
     }
-    var oldCoverage = wastedList[item.url].coverage;
-    if (oldCoverage !== -1 && newCoverage > oldCoverage) continue;
-    wastedList[item.url].coverage = newCoverage;
-    wastedList[item.url].type = auditName;
-    wastedList[item.url].wastedSize = parseInt(item.totalBytes - (newCoverage/100)*item.totalBytes); // in kb
   }
+  return wastedList;
 }
 
 

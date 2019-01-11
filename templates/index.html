@@ -59,6 +59,7 @@ limitations under the License.
         background-position: 0 0, 20px 50px, 120px 280px, 60px 110px, 400px 500px;
       }
 
+
       #noscript {
         font-size: 200%;
         font-style: bold;
@@ -96,7 +97,7 @@ limitations under the License.
        line-height: 150%;
      }
 
-     #infoPopup, #tablePopup, #gameEndPopup, #urlInputDialog {
+     #infoPopup, #tablePopup, #gameEndPopup, #urlInputDialog, #loadingPopup {
        background-color: #bd6a1d;
        border-radius: 25px;
        border: 6px solid #833f00;
@@ -106,23 +107,34 @@ limitations under the License.
        width: 400px;
      }
 
-     #infoPopupTitle, #tablePopupTitle, #urlPopupTitle, #gameEndPopupTitle {
+     #infoPopupTitle, #tablePopupTitle, #urlPopupTitle, #gameEndPopupTitle, #loadingPopupTitle {
        font-size:20pt;
        color: white;
        line-height: 150%;
      }
 
-     #infoPopupContent, #tablePopupContent, #gameEndPopupContent {
+     #infoPopupContent, #tablePopupContent, #gameEndPopupContent, #loadingPopupContent {
        font-size:20pt;
        color: white;
        line-height: 150%;
      }
 
-     #install_btn, #share_btn, #replay_btn, #report_btn, #start_btn {
+     #install_btn, #share_btn, #replay_btn, #report_btn, #start_btn, #info_close_btn, #table_close_btn, #loading_close_btn {
        color: white;
+       margin: 5px;
+       background-color:#833f00;
+     }
+
+     #install_btn:disabled, #share_btn:disabled, #replay_btn:disabled,
+     #report_btn:disabled, #start_btn:disabled, #info_close_btn:disabled,
+     #table_close_btn:disabled, #loading_close_btn:disabled {
+       color: #666666;
        margin: 5px;
      }
 
+    #loadingPopup td {
+      vertical-align: middle;
+    }
 
     </style>
 </head>
@@ -143,7 +155,7 @@ limitations under the License.
         <label class="mdl-textfield__label" for="url">URL to play</label>
        </div>
       <div class="mdl-dialog__actions">
-        <button type="button" disabled class="mdl-button" style="background-color:#833f00;" id="start_btn">Play</button>
+        <button type="button" disabled class="mdl-button" id="start_btn">Play</button>
       </div>
     </form>
   </dialog>
@@ -156,6 +168,26 @@ limitations under the License.
       <p id="infoPopupContent">
       </p>
     </div>
+    <div class="mdl-dialog__actions">
+      <button type="button" class="mdl-button dialog_close_btn" id="info_close_btn">Close</button>
+    </div>
+  </dialog>
+
+  <dialog class="mdl-dialog" id="loadingPopup">
+    <div class="mdl-dialog__content" style="padding:0px;">
+      <p id="loadingPopupTitle">
+      </p>
+      <table id="loadingPopupContent">
+        <tr>
+          <td><i class="material-icons" id="last_hint">arrow_back_ios</i></td>
+          <td id="loadingPopupHint"></td>
+          <td><i class="material-icons" id="next_hint">arrow_forward_ios</i></td>
+        </tr>
+      </table>
+    </div>
+    <div class="mdl-dialog__actions">
+      <button type="button" class="mdl-button dialog_close_btn" id="loading_close_btn">Start Game</button>
+    </div>
   </dialog>
 
 
@@ -165,6 +197,9 @@ limitations under the License.
       </p>
       <table id = "tablePopupContent">
       </table>
+    </div>
+    <div class="mdl-dialog__actions">
+      <button type="button" class="mdl-button dialog_close_btn" id="table_close_btn">Close</button>
     </div>
   </dialog>
 
@@ -180,16 +215,16 @@ limitations under the License.
         </div>
       </p>
       <div class="mdl-dialog__actions mdl-dialog__actions--full-width">
-        <button type="button" class="mdl-button" style="background-color:#833f00;" id="replay_btn">
+        <button type="button" class="mdl-button" id="replay_btn">
           Play Again<i class="material-icons">refresh</i>
         </button>
-        <button type="button" class="mdl-button" style="background-color:#833f00;" id="share_btn">
+        <button type="button" class="mdl-button" id="share_btn">
           Share<i class="material-icons">share</i>
         </button>
-        <button type="button" class="mdl-button" style="background-color:#833f00;" id="install_btn">
+        <button type="button" class="mdl-button" id="install_btn">
           Add to Homescreen<i class="material-icons">system_update</i>
         </button>
-        <button type="button" class="mdl-button" style="background-color:#833f00;" id="report_btn">
+        <button type="button" class="mdl-button" id="report_btn">
           Full Perf Report<i class="material-icons">list_alt</i>
         </button>
       </div>
