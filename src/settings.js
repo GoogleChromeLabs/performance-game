@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const common = require('./common.js')
+'use strict';
+
+const common = require('./common.js');
 
 var mobileSettings = {
   min_asteroid_size: 25,
@@ -22,8 +24,8 @@ var mobileSettings = {
   min_asteroid_speed: 30,
   max_asteroid_speed: 70,
   max_asteroids_at_once: 5,
-  asteroid_size_threshold: 2 // in kb, to ignore plain pings
-}
+  asteroid_size_threshold: 2, // in kb, to ignore plain pings
+};
 
 var desktopSettings = {
   min_asteroid_size: 35,
@@ -31,11 +33,11 @@ var desktopSettings = {
   min_asteroid_speed: 40,
   max_asteroid_speed: 120,
   max_asteroids_at_once: 30,
-  asteroid_size_threshold: 1 // in kb, to ignore plain pings
-}
+  asteroid_size_threshold: 1, // in kb, to ignore plain pings
+};
 
 var settings;
-if(common.isMobile()) settings = mobileSettings;
+if (common.isMobile()) settings = mobileSettings;
 else settings = desktopSettings;
 
 module.exports.settings = settings;

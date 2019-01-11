@@ -18,6 +18,9 @@
     "document": true,
     "Phaser": true,
     "window": true,
-    "fetch": true
+    "fetch": true,
+    "navigator": true,
+    "gtag": true,
+    "dialogPolyfill": true
   }
 }

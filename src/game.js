@@ -17,10 +17,10 @@ limitations under the License.
 
 'use strict';
 
-require('dialog-polyfill')
-const commons = require('./common.js')
-const settings_module = require('./settings.js')
-const dialogs = require('./dialogs.js')
+require('dialog-polyfill');
+const commons = require('./common.js');
+const settings_module = require('./settings.js');
+const dialogs = require('./dialogs.js');
 
 var game;
 
@@ -58,14 +58,12 @@ var gameOver = false;
 var hitEmitter;
 var explosionEmitter;
 
-var dialogOpened; // timestamp to remember when a dialog was opened, we'll disalow closing for like 2s
 var deferredPrompt;
 
 window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
+function gtag(){ dataLayer.push(arguments); }
 gtag('js', new Date());
-gtag('config', 'UA-123358764-1', { 'anonymize_ip': true });
-
+gtag('config', 'UA-123358764-1', { anonymize_ip: true });
 
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -74,9 +72,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 if ('serviceWorker' in navigator) {
-   window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
-   });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js');
+  });
 }
 
 dialogs.setupDialogs(startGame);
@@ -86,15 +84,15 @@ function startGame() {
   var url = commons.getInputURL();
   var hostname = (new URL(url)).hostname;
   gtag('event', 'game', {
-    'event_category' : 'start',
-    'event_label' : hostname
+    event_category: 'start',
+    event_label: hostname,
   });
   document.getElementById('urlInputDialog').close();
   getGamestateAndStart();
 }
 
 function getGamestateAndStart() {
-  //show loading popup
+  // show loading popup
   dialogs.showLoadingPopup(game, 'Loading Game...', hints);
   // get gamestate from server to start game
   urlToPlay = commons.getInputURL();
@@ -117,7 +115,7 @@ function getGamestateAndStart() {
     currentLevel = levels.shift();
     clearInterval(hintInterval);
     dialogs.closeLoadingPopup(); // close the loading popup
-    dialogs.showInfoPopup(game, "Level " + currentLevel.levelNumber + "<br>" + currentLevel.name, "");
+    dialogs.showInfoPopup(game, 'Level ' + currentLevel.levelNumber + '<br>' + currentLevel.name, '');
   }).catch(function(error) {
     clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
@@ -157,11 +155,10 @@ var hints = [
 ];
 // give correct control advice
 // we do not (!!) use user agent here, to accomodate for chrome emulator
-if(commons.hasMotionSensor()) {
-  hints.push("Keep device leveled to stop ship, tilt for movement, tuch to fire!");
-}
-else {
-  hints.push("Control with arrow keys, fire with space, close dialogs with Enter!");
+if (commons.hasMotionSensor()) {
+  hints.push('Keep device leveled to stop ship, tilt for movement, tuch to fire!');
+} else {
+  hints.push('Control with arrow keys, fire with space, close dialogs with Enter!');
 }
 
 function create() {
@@ -171,7 +168,7 @@ function create() {
   game.renderer.roundPixels = true;
 
   //  A nice background
-  //game.add.tileSprite(0, 0, game.width, game.height, 'background');
+  // game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
   //  We need arcade physics
   game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -244,30 +241,30 @@ function create() {
   explosionEmitter.gravity = 0;
   explosionEmitter.setAlpha(0, 0.1);
 
-  document.body.addEventListener("touchend", function() {
-    if(!game.paused) fireBullet();
+  document.body.addEventListener('touchend', function() {
+    if (!game.paused) fireBullet();
   }, false);
 
   // motion info
-  window.addEventListener("deviceorientation", handleOrientation, true);
+  window.addEventListener('deviceorientation', handleOrientation, true);
 
   game.paused = true;
 }
 
 function handleOrientation(e) {
-    if(game.paused) return;
-    var x = e.gamma;
-    var y = e.beta;
-    var radian = Phaser.Math.angleBetweenPoints(ship.body.position, new Phaser.Point(ship.body.x+x, ship.body.y+y));
-    ship.angle = radian * 180 / Math.PI;
-    ship.body.velocity.x += x;
-    ship.body.velocity.y += y;
+  if (game.paused) return;
+  var x = e.gamma;
+  var y = e.beta;
+  var radian = Phaser.Math.angleBetweenPoints(ship.body.position, new Phaser.Point(ship.body.x + x, ship.body.y + y));
+  ship.angle = radian * 180 / Math.PI;
+  ship.body.velocity.x += x;
+  ship.body.velocity.y += y;
 
 }
 
 function update() {
 
-  if(!currentLevel) return;
+  if (!currentLevel) return;
 
   if (cursors.up.isDown) {
     game.physics.arcade.accelerationFromRotation(ship.rotation, 200, ship.body.acceleration);
@@ -285,7 +282,7 @@ function update() {
 
   if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
     // we'll only allow one shot every x ms
-    if(Date.now() - lastShotTime > shoot_delay) {
+    if (Date.now() - lastShotTime > shoot_delay) {
       fireBullet();
       lastShotTime = Date.now();
     }
@@ -323,23 +320,20 @@ function update() {
   }
 
   // check if we need to create a goodie
-  for (i = gamestate.goodies.length-1; i>=0; i--) {
+  for (i = gamestate.goodies.length - 1; i >= 0; i--) {
     var goodie = gamestate.goodies[i];
     if (goodie.time < currentTime) {
       gamestate.goodies.splice(i, 1);
       var point = createRandomPointOutsideGame();
       var goodieSprite;
-      if(goodie.type === "extra-life") {
-          goodieSprite = goodies.create(point.x, point.y, 'heart');
-      }
-      else if(goodie.type === "shield") {
-          goodieSprite = goodies.create(point.x, point.y, 'shield_powerup');
-      }
-      else if(goodie.type === "bomb") {
-          goodieSprite = goodies.create(point.x, point.y, 'pwa_logo');
-      }
-      else if(goodie.type === "shoot-rate") {
-          goodieSprite = goodies.create(point.x, point.y, 'sw_logo');
+      if (goodie.type === 'extra-life') {
+        goodieSprite = goodies.create(point.x, point.y, 'heart');
+      } else if (goodie.type === 'shield') {
+        goodieSprite = goodies.create(point.x, point.y, 'shield_powerup');
+      } else if (goodie.type === 'bomb') {
+        goodieSprite = goodies.create(point.x, point.y, 'pwa_logo');
+      } else if (goodie.type === 'shoot-rate') {
+        goodieSprite = goodies.create(point.x, point.y, 'sw_logo');
       }
       goodieSprite.width = heartWidth;
       goodieSprite.height = heartHeight;
@@ -373,12 +367,12 @@ function update() {
     if (currentLevel.resources.length === 0) {
       endGame(true);
     } else {
-      var values = [["Load Time", (lastLevel.time/1000).toFixed(1) + "s"],
-                    ["Resources", lastLevel.resourcesCount],
-                    ["KB Loaded", parseInt(lastLevel.totalSize/1024)],
-                    ["KB Wasted", parseInt(lastLevel.wastedSize/1024)],
-                    ["JS Bootup", (lastLevel.bootupTime/1000).toFixed(1) + "s"]];
-      dialogs.showDetailsPopup(game, "Level " + lastLevel.levelNumber + "<br>" + lastLevel.name + " finished!", values);
+      var values = [['Load Time', (lastLevel.time / 1000).toFixed(1) + 's'],
+        ['Resources', lastLevel.resourcesCount],
+        ['KB Loaded', parseInt(lastLevel.totalSize / 1024)],
+        ['KB Wasted', parseInt(lastLevel.wastedSize / 1024)],
+        ['JS Bootup', (lastLevel.bootupTime / 1000).toFixed(1) + 's']];
+      dialogs.showDetailsPopup(game, 'Level ' + lastLevel.levelNumber + '<br>' + lastLevel.name + ' finished!', values);
     }
   } else if (levels.length === 0 && currentLevel.resources.length === 0 && asteroids.length === 0 && ship.health > 0) {
     // was the game won?
@@ -401,27 +395,24 @@ function update() {
 
 // enter or touch closes dialogs - but only after gaem started, and if dialog is open more than 1.5s
 var closePopups = function() {
-  if(!gamestate) return;  // game didn't start yet
-  if(Date.now() - dialogOpened < 1500) return; // dialog just opened
-  if(dialogs.isDetailsPopupShowing()) {
+  if (!gamestate) return; // game didn't start yet
+  if (dialogs.isDetailsPopupShowing()) {
     dialogs.closeDetailsPopup();
-    showInfoPopup("Level " + currentLevel.levelNumber + " " + currentLevel.name);
-  }
-  else dialogs.closeInfoPopup();
+    showInfoPopup('Level ' + currentLevel.levelNumber + ' ' + currentLevel.name);
+  } else dialogs.closeInfoPopup();
 };
 
 //  Called if the bullet hits one of the veg sprites
 function asteroidHit(bullet, asteroid) {
   asteroid.health -= 10; // every bullet represents 10kb download right now
   bullet.kill();
-  if (!asteroid.floatLabel || asteroid.floatLabel.alpha<0.5) {
+  if (!asteroid.floatLabel || asteroid.floatLabel.alpha < 0.5) {
     createFloatingLabel(asteroid.label, asteroid.x, asteroid.y, asteroid);
   }
 
   if (asteroid.health <= 0) {
     destroyAsteroid(asteroid);
-  }
-  else {
+  } else {
     // show hit particles
     hitEmitter.x = asteroid.x;
     hitEmitter.y = asteroid.y;
@@ -469,7 +460,7 @@ function screenWrap(sprite) {
   // we'll wrap the ship immediately, the other stuff can be a bit more outside
   // before we wrap it back
   var dist = 80;
-  if(sprite === ship) dist = 0;
+  if (sprite === ship) dist = 0;
 
   if (sprite.x < -dist) {
     sprite.x = game.width;
@@ -546,18 +537,15 @@ function createRandomPointOutsideGame() {
 function shipHitGoodie(ship, goodieSprite) {
   var goodie = goodieSprite.goodie;
   goodies.remove(goodieSprite);
-  if(goodie.type === "extra-life") {
+  if (goodie.type === 'extra-life') {
     ship.health++;
-  }
-  else if(goodie.type === "shield") {
+  } else if (goodie.type === 'shield') {
     makeShipInvincible(10000, true);
-  }
-  else if(goodie.type === "bomb") {
+  } else if (goodie.type === 'bomb') {
     for (var i = asteroids.children.length - 1; i >= 0; i--) {
       destroyAsteroid(asteroids.children[i]);
     }
-  }
-  else if(goodie.type === "shoot-rate") {
+  } else if (goodie.type === 'shoot-rate') {
     shoot_delay = 100;
   }
   createFloatingLabel(goodie.name, goodieSprite.x, goodieSprite.y, goodieSprite);
@@ -570,7 +558,7 @@ function makeShipInvincible(duration, showShip) {
   setTimeout(function(){
     ship.loadTexture('ship');
     ship.invincible = false;
-  }, duration)
+  }, duration);
 }
 
 function shipHit(ship, asteroid) {
@@ -580,20 +568,19 @@ function shipHit(ship, asteroid) {
   showExplosion(ship.x, ship.y);
   if (ship.health === 0) {
     endGame(false);
-  }
-  else {
+  } else {
     // hide the ship
     ship.alpha = 0;
-    //make the ship invincible, a bit longer than it's hidden, so that player can respwan safely
+    // make the ship invincible, a bit longer than it's hidden, so that player can respwan safely
     makeShipInvincible(5000, false);
     // reset everything for respawn
     setTimeout(function() {
       ship.alpha = 1;
       ship.body.acceleration.set(0);
       ship.body.speed = 0;
-      ship.body.velocity.set(0,0);
-      ship.x = game.width/2;
-      ship.y = game.height/2;
+      ship.body.velocity.set(0, 0);
+      ship.x = game.width / 2;
+      ship.y = game.height / 2;
     }, 3000);
   }
 }
@@ -602,7 +589,7 @@ function endGame(won) {
   gameOver = true;
   dialogs.showGameEndPopup(game, deferredPrompt, won);
   gtag('event', 'game', {
-    'event_category' : 'end',
-    'event_label' : won ? "won" : "lost"
+    event_category: 'end',
+    event_label: won ? 'won' : 'lost',
   });
 }
