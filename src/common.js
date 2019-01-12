@@ -22,7 +22,6 @@ module.exports.seeReport = seeReport;
 module.exports.share = share;
 module.exports.getUrlParam = getUrlParam;
 module.exports.isMobile = isMobile;
-module.exports.hasMotionSensor = hasMotionSensor;
 module.exports.injectCSS = injectCSS;
 module.exports.getControlText = getControlText;
 
@@ -91,14 +90,10 @@ function isMobile() {
   return navigator.appVersion.indexOf('Mobile') >= 0;
 }
 
-function hasMotionSensor() {
-  return navigator.platform === 'Android' || navigator.platform === 'iOS';
-}
-
 function getControlText() {
   var content = "";
-  if (hasMotionSensor()) {
-    content = 'Keep device leveled to stop ship, tilt for movement, tuch to fire!';
+  if (isMobile()) {
+    content = 'Control with device movement (tilt!), fire with touch.  Please level device before starting!';
   } else {
     content = 'Control with arrow keys, fire with space, close dialogs with Enter!';
   }
