@@ -40,4 +40,18 @@ var settings;
 if (common.isMobile()) settings = mobileSettings;
 else settings = desktopSettings;
 
+settings.hints = [
+  'This game visualizes the loading process of a website as game.',
+  'Every level represents one reached performance metric.',
+  'Every asteroid represents one loaded resource.',
+  'Every shot represents a 10kb download.',
+  'Color of an asteroid repesents how much of the resource was used.',
+  'A green asteroid means more than 85% of the resource is used.',
+  'An orange asteroid means less than 85% of the resource is used.',
+  'A red asteroid means less than 50% of the resource is used.',
+  'An active service worker gives faster fire rate.',
+  'Active HTTPS will give you a shield.',
+  'A well-built PWA gives you a powerup to destroy all asteroids at once',
+];
+
 module.exports.settings = settings;

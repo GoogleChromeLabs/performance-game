@@ -93,7 +93,13 @@ function startGame() {
 
 function getGamestateAndStart() {
   // show loading popup
-  dialogs.showLoadingPopup(game, 'Loading Game...', hints);
+  var dlg = dialogs.showLoadingPopup(game, 'Loading Game...', settings.hints);
+  dlg.addEventListener("close", function() {
+        // give correct control advice
+        // we do not (!!) use user agent here, to accomodate for chrome emulator
+        var content = commons.getControlText();
+        dialogs.showInfoPopup(game, 'Level ' + currentLevel.levelNumber + '<br>' + currentLevel.name, content);
+  });
   // get gamestate from server to start game
   urlToPlay = commons.getInputURL();
   fetch('gamestate.json?url=' + urlToPlay, {mode: 'cors', credentials: 'same-origin'}).then(function(response) {
@@ -114,8 +120,7 @@ function getGamestateAndStart() {
     levels = JSON.parse(JSON.stringify(gamestate.levels)); // we'll manipulate that later on, so we'll use a copy
     currentLevel = levels.shift();
     clearInterval(hintInterval);
-    dialogs.closeLoadingPopup(); // close the loading popup
-    dialogs.showInfoPopup(game, 'Level ' + currentLevel.levelNumber + '<br>' + currentLevel.name, '');
+    dialogs.setLoadingDone(true);
   }).catch(function(error) {
     clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
@@ -140,25 +145,6 @@ function preload() {
   game.load.image('pwa_logo', 'img/pwa_logo.png');
   game.load.image('sw_logo', 'img/sw_logo.png');
   game.load.image('explosion_particle', 'img/explosion_particle.png');
-}
-
-var hints = [
-  'Every asteroid represents one loaded resource.',
-  'Every shot represents a 10kb download.',
-  'A red asteroid means less than 50% of the resource is used',
-  'An orange asteroid means less than 85% of the resource is used',
-  'A green asteroid means more than 85% of the resource is used',
-  'An active service worker gives faster fire rate',
-  'Active HTTPS will give you a shield.',
-  '52% of users abandon a site which loads longer than 3s',
-  'A well-built PWA gives you a powerup to destroy all asteroids at once',
-];
-// give correct control advice
-// we do not (!!) use user agent here, to accomodate for chrome emulator
-if (commons.hasMotionSensor()) {
-  hints.push('Keep device leveled to stop ship, tilt for movement, tuch to fire!');
-} else {
-  hints.push('Control with arrow keys, fire with space, close dialogs with Enter!');
 }
 
 function create() {
@@ -372,7 +358,10 @@ function update() {
         ['KB Loaded', parseInt(lastLevel.totalSize / 1024)],
         ['KB Wasted', parseInt(lastLevel.wastedSize / 1024)],
         ['JS Bootup', (lastLevel.bootupTime / 1000).toFixed(1) + 's']];
-      dialogs.showDetailsPopup(game, 'Level ' + lastLevel.levelNumber + '<br>' + lastLevel.name + ' finished!', values);
+      var detDlg = dialogs.showDetailsPopup(game, 'Level ' + lastLevel.levelNumber + '<br>' + lastLevel.name + ' finished!', values);
+      detDlg.onclose = function() {
+        dialogs.showInfoPopup(game, 'Level ' + currentLevel.levelNumber + '<br>' + currentLevel.name, commons.getControlText());
+      }
     }
   } else if (levels.length === 0 && currentLevel.resources.length === 0 && asteroids.length === 0 && ship.health > 0) {
     // was the game won?
@@ -392,15 +381,6 @@ function update() {
   }
 
 }
-
-// enter or touch closes dialogs - but only after gaem started, and if dialog is open more than 1.5s
-var closePopups = function() {
-  if (!gamestate) return; // game didn't start yet
-  if (dialogs.isDetailsPopupShowing()) {
-    dialogs.closeDetailsPopup();
-    showInfoPopup('Level ' + currentLevel.levelNumber + ' ' + currentLevel.name);
-  } else dialogs.closeInfoPopup();
-};
 
 //  Called if the bullet hits one of the veg sprites
 function asteroidHit(bullet, asteroid) {

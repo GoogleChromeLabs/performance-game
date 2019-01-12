@@ -69,6 +69,13 @@ limitations under the License.
         margin-top: 300px;
       }
 
+      #progress {
+          margin-top: 25px;
+          margin-bottom: 25px;
+          width: 60%;
+          text-align: center;
+      }
+
       #input_error_lbl {
         color: white;
       }
@@ -91,7 +98,7 @@ limitations under the License.
         text-align: left;
       }
 
-     #urlPopupContent {
+     #urlPopupContent, #infoPopupContent {
        font-size:14pt;
        color: white;
        line-height: 150%;
@@ -113,10 +120,15 @@ limitations under the License.
        line-height: 150%;
      }
 
-     #infoPopupContent, #tablePopupContent, #gameEndPopupContent, #loadingPopupContent {
+     #tablePopupContent, #gameEndPopupContent, #loadingPopupContent {
        font-size:20pt;
        color: white;
        line-height: 150%;
+     }
+
+     #loadingPopupContent {
+       font-size:15pt;
+       line-height: 130%;
      }
 
      #install_btn, #share_btn, #replay_btn, #report_btn, #start_btn, #info_close_btn, #table_close_btn, #loading_close_btn {
@@ -177,6 +189,9 @@ limitations under the License.
     <div class="mdl-dialog__content" style="padding:0px;">
       <p id="loadingPopupTitle">
       </p>
+      <center>
+          <div id="progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
+      </center>
       <table id="loadingPopupContent">
         <tr>
           <td><i class="material-icons" id="last_hint">arrow_back_ios</i></td>

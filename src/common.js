@@ -24,6 +24,7 @@ module.exports.getUrlParam = getUrlParam;
 module.exports.isMobile = isMobile;
 module.exports.hasMotionSensor = hasMotionSensor;
 module.exports.injectCSS = injectCSS;
+module.exports.getControlText = getControlText;
 
 
 /**
@@ -92,4 +93,14 @@ function isMobile() {
 
 function hasMotionSensor() {
   return navigator.platform === 'Android' || navigator.platform === 'iOS';
+}
+
+function getControlText() {
+  var content = "";
+  if (hasMotionSensor()) {
+    content = 'Keep device leveled to stop ship, tilt for movement, tuch to fire!';
+  } else {
+    content = 'Control with arrow keys, fire with space, close dialogs with Enter!';
+  }
+  return content;
 }

@@ -24,6 +24,7 @@ module.exports = {
   closeInfoPopup: closeInfoPopup,
   showLoadingPopup: showLoadingPopup,
   closeLoadingPopup: closeLoadingPopup,
+  setLoadingDone: setLoadingDone,
   showDetailsPopup: showDetailsPopup,
   closeDetailsPopup: closeDetailsPopup,
   isDetailsPopupShowing: isDetailsPopupShowing,
@@ -79,6 +80,14 @@ function setupDialogs(gameStartFct) {
       if (e.keyCode === 13)
         closeDetailsPopup();
     });
+    var closebtn3 = document.querySelector('#loading_close_btn');
+    closebtn3.addEventListener('click', function(e) {
+      closeLoadingPopup();
+    });
+    closebtn3.addEventListener('keyup', function(e){
+      if (e.keyCode === 13)
+        closeLoadingPopup();
+    });
 
     var elem = document.getElementById('url');
     var btn = document.getElementById('start_btn');
@@ -112,7 +121,7 @@ function showInfoPopup(game, title, text = '', closable = true) {
     popup.showModal();
     dialogOpened = Date.now();
     closebtn.disabled = true;
-    setTimeout(function() { closebtn.disabled = false; }, button_delay);
+    setTimeout(function() { closebtn.disabled = false; closebtn.focus();}, button_delay);
   }
   closebtn.style.display = closable ? 'inline-block' : 'none';
   if (game && game.isBooted) game.paused = true;
@@ -134,13 +143,31 @@ function showLoadingPopup(game, title, hints) {
     currentHint = currentHint % hints.length;
     document.getElementById('loadingPopupHint').innerHTML = hints[currentHint];
   };
+  setLoadingDone(false);
   var popup = document.getElementById('loadingPopup');
   if (!popup.open) {
     popup.showModal();
     dialogOpened = Date.now();
   }
   if (game && game.isBooted) game.paused = true;
+  document.querySelector('#info_close_btn').focus();
+  return popup;
 }
+
+function setLoadingDone(done) {
+  var btn = document.querySelector('#loading_close_btn');
+  var pro = document.querySelector('#progress');
+  if(done) {
+    btn.disabled = false;
+    pro.style.display = "none";
+    btn.focus();
+  }
+  else {
+    btn.disabled = true;
+    pro.style.display = "block";
+  }
+}
+
 
 function closeLoadingPopup() {
   document.getElementById('loadingPopup').close();
@@ -161,9 +188,10 @@ function showDetailsPopup(game, title, values) {
     dialogOpened = Date.now();
     var closebtn = document.querySelector('#table_close_btn');
     closebtn.disabled = true;
-    setTimeout(function() { closebtn.disabled = false; }, button_delay);
+    setTimeout(function() { closebtn.disabled = false; closebtn.focus(); }, button_delay);
   }
   game.paused = true;
+  return popup;
 }
 
 function closeDetailsPopup() {
