@@ -16,14 +16,27 @@ limitations under the License.
 
 'use strict';
 
-module.exports.isMobile = isMobile;
-module.exports.getInputURL = getInputURL;
-module.exports.seeReport = seeReport;
-module.exports.share = share;
-module.exports.getUrlParam = getUrlParam;
-module.exports.isMobile = isMobile;
-module.exports.injectCSS = injectCSS;
-module.exports.getControlText = getControlText;
+module.exports = {
+  isMobile: isMobile,
+  getInputURL: getInputURL,
+  seeReport: seeReport,
+  share: share,
+  getUrlParam: getUrlParam,
+  isMobile: isMobile,
+  injectCSS: injectCSS,
+  getControlText: getControlText,
+  createRandomPointOutsideGame: createRandomPointOutsideGame,
+  screenWrap: screenWrap,
+  makeShipInvincible: makeShipInvincible,
+  destroyAsteroid: destroyAsteroid,
+  showExplosion: showExplosion,
+  createFloatingLabel: createFloatingLabel,
+  updateLabels: updateLabels
+}
+
+
+var explosionEmitter;
+var labels = [];
 
 
 /**
@@ -98,4 +111,85 @@ function getControlText() {
     content = 'Control with arrow keys, fire with space, close dialogs with Enter!';
   }
   return content;
+}
+
+function createRandomPointOutsideGame(game) {
+  var dist = 80; // distance to gamefield, we'll create them a bit outside
+  var rnd = Math.random();
+  var point = {x: 0, y: 0};
+  if (rnd < 0.25) point = {x: -dist, y: game.world.randomY};
+  else if (rnd < 0.5) point = {x: game.width + dist, y: game.world.randomY};
+  else if (rnd < 0.75) point = {x: game.world.randomX, y: -dist};
+  else point = {x: game.world.randomX, y: game.height + dist};
+  return point;
+}
+
+
+function screenWrap(sprite, game, margin = 80) {
+  if (sprite.x < -margin) {
+    sprite.x = game.width;
+  } else if (sprite.x > game.width + margin) {
+    sprite.x = 0;
+  }
+
+  if (sprite.y < -margin) {
+    sprite.y = game.height;
+  } else if (sprite.y > game.height + margin) {
+    sprite.y = 0;
+  }
+}
+
+
+function makeShipInvincible(ship, duration, showShip) {
+  ship.alpha = showShip ? 1 : 0;
+  ship.loadTexture('ship_shielded');
+  ship.invincible = true;
+  setTimeout(function(){
+    ship.loadTexture('ship');
+    ship.invincible = false;
+  }, duration);
+}
+
+
+function destroyAsteroid(game, asteroids, asteroid) {
+  asteroids.remove(asteroid, true);
+  // and an explosion with particles!
+  showExplosion(game, asteroid.x, asteroid.y);
+}
+
+
+function showExplosion(game, x, y) {
+  if(!explosionEmitter) {
+    // emitter  for particles when a asteroid is destroyes
+    explosionEmitter = game.add.emitter(0, 0, 70);
+    explosionEmitter.makeParticles('explosion_particle');
+    explosionEmitter.gravity = 0;
+    explosionEmitter.setAlpha(0, 0.1);
+  }
+  explosionEmitter.x = x;
+  explosionEmitter.y = y;
+  explosionEmitter.start(true, 300, 50, 70);
+}
+
+
+function createFloatingLabel(game, text, x, y, sourceSprite) {
+  var style = { font: '19px Arial', fill: '#ff0044', align: 'center' };
+  var t = game.add.text(x, y, text, style);
+  labels.push(t);
+  t.sourceSprite = sourceSprite;
+  sourceSprite.floatLabel = t;
+}
+
+function updateLabels() {
+  // update floating labels
+  for (var i = labels.length - 1; i >= 0; i--) {
+    labels[i].alpha -= 0.003;
+    labels[i].y -= 2;
+    if (labels[i].alpha <= 0) {
+      labels[i].sourceSprite.floatLabel = null;
+      labels[i].sourceSprite = null;
+      labels[i].destroy();
+      labels.splice(i, 1);
+    }
+  }
 }

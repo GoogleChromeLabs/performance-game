@@ -20,15 +20,15 @@
   <sodipodi:namedview
      inkscape:snap-global="false"
      inkscape:window-maximized="0"
-     inkscape:window-y="35"
-     inkscape:window-x="134"
-     inkscape:window-height="1035"
-     inkscape:window-width="1522"
+     inkscape:window-y="0"
+     inkscape:window-x="13"
+     inkscape:window-height="856"
+     inkscape:window-width="1440"
      showgrid="true"
      inkscape:current-layer="g15751"
      inkscape:document-units="mm"
      inkscape:cy="349.7561"
-     inkscape:cx="-179.7031"
+     inkscape:cx="-675.51981"
      inkscape:zoom="0.73615912"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -704,5 +704,96 @@
          d="M -625.69531 685.16211 C -635.49903 688.14066 -641.48309 700.44067 -652.80664 698.7168 C -667.51351 705.7686 -668.14888 728.99762 -686.04102 731.2793 C -696.96343 732.72242 -707.07486 722.78631 -707.48047 712.11328 C -716.9973 711.08591 -717.16276 723.57496 -716.62334 730.22153 C -715.45603 746.5001 -701.1362 761.18164 -707.34961 777.94727 C -712.3705 787.03828 -723.58223 791.92747 -725.89844 802.63086 C -720.98079 811.37701 -708.57607 807.27294 -703.76562 800.81055 C -689.09595 797.183 -678.28803 817.83816 -687.48047 828.79883 C -687.49113 839.37109 -667.84994 842.16269 -667.51205 830.32816 C -666.55277 820.8398 -665.30157 807.12166 -653.70639 804.98614 C -638.28211 800.30717 -624.40747 811.59739 -612.16602 818.70312 C -602.43237 815.13583 -605.69585 800.15011 -614.49414 797.5625 C -622.48395 789.8751 -626.08121 773.34422 -614.73828 766.98242 C -607.74146 764.18152 -596.42854 764.88592 -594.62305 755.51367 C -596.04558 745.60616 -608.29024 743.44972 -616.44531 745.46484 C -628.33954 741.58331 -631.20318 727.55546 -639.76953 719.86328 C -643.92986 708.5351 -630.84743 700.12598 -620.90625 699.93945 C -618.13753 698.96334 -609.10768 699.0066 -612.67578 694.12695 C -615.33891 689.32285 -619.66047 684.56908 -625.69531 685.16211 z "
          style="opacity:1;fill:#ffec00;fill-opacity:1;stroke:none;stroke-width:1.66998339;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0" />
     </g>
+    <g
+       id="g1061"
+       transform="matrix(2.0833333,0,0,2.0833333,-210.96425,-24.069845)"
+       style="fill:none;fill-rule:nonzero"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/pwa_installable.png"
+       inkscape:export-xdpi="26.540001"
+       inkscape:export-ydpi="26.540001">
+      <circle
+         id="circle1057"
+         r="12"
+         cy="12"
+         cx="12"
+         style="fill:#d4ecd5" />
+      <path
+         id="path1059"
+         d="m 12,5 a 7,7 0 1 0 0,14 7,7 0 0 0 0,-14 z m 3.5,7.7 h -2.8 v 2.8 H 11.3 V 12.7 H 8.5 v -1.4 h 2.8 V 8.5 h 1.4 v 2.8 h 2.8 z"
+         inkscape:connector-curvature="0"
+         style="fill:#009688" />
+    </g>
+    <g
+       id="g1130"
+       transform="matrix(2.0833333,0,0,2.0833333,-208.80779,-139.08121)"
+       style="fill:none;fill-rule:nonzero"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/pwa_reliable.png"
+       inkscape:export-xdpi="26.540001"
+       inkscape:export-ydpi="26.540001">
+      <circle
+         id="circle1126"
+         r="12"
+         cy="12"
+         cx="12"
+         style="fill:#cce3f6" />
+      <path
+         id="path1128"
+         d="m 12,4.3 6.3,2.8 v 4.2 c 0,3.88 -2.69,7.52 -6.3,8.4 C 8.39,18.82 5.7,15.19 5.7,11.3 V 7.1 Z m -0.56,12.88 3.3,-5.79 0.04,-0.08 c 0.05,-0.1 0.01,-0.29 -0.26,-0.29 H 12.56 L 13.12,7.1 H 12.56 L 9.3,12.82 c 0,0.03 0.07,-0.12 -0.03,0.07 -0.11,0.2 -0.12,0.37 0.2,0.37 h 1.97 l -0.56,3.92 z"
+         inkscape:connector-curvature="0"
+         style="fill:#304ffe" />
+    </g>
+    <g
+       id="g1203"
+       transform="matrix(2.0833333,0,0,2.0833333,-209.5266,-81.216118)"
+       style="fill:none;fill-rule:evenodd"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/pwa_optimized.png"
+       inkscape:export-xdpi="26.540001"
+       inkscape:export-ydpi="26.540001">
+      <rect
+         id="rect1197"
+         rx="12"
+         height="24"
+         width="24"
+         x="0"
+         y="0"
+         style="fill:#fce4ec" />
+      <path
+         id="path1199"
+         d="M 5,5 H 19 V 19 H 5 Z"
+         inkscape:connector-curvature="0" />
+      <path
+         id="path1201"
+         d="m 12,15.07 3.6,2.18 -0.95,-4.1 3.18,-2.76 -4.2,-0.36 -1.63,-3.86 -1.64,3.86 -4.2,0.36 3.2,2.76 -0.96,4.1 z"
+         inkscape:connector-curvature="0"
+         style="fill:#ec3f7a" />
+    </g>
+    <g
+       style="fill:none;fill-rule:nonzero"
+       transform="matrix(2.0833333,0,0,2.0833333,-119.31456,-14.365761)"
+       id="g942"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/pwa_secure.png"
+       inkscape:export-xdpi="26.540001"
+       inkscape:export-ydpi="26.540001">
+      <circle
+         style="fill:#d4ecd5"
+         cx="12"
+         cy="12"
+         r="12"
+         id="circle938" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:32.35334015px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.80883354"
+       x="-110.49123"
+       y="27.506001"
+       id="text1284"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/pwa_secure.png"
+       inkscape:export-xdpi="26.540001"
+       inkscape:export-ydpi="26.540001"><tspan
+         sodipodi:role="line"
+         id="tspan1282"
+         x="-110.49123"
+         y="27.506001"
+         style="stroke-width:0.80883354;fill:#51b555;fill-opacity:1"></tspan></text>
   </g>
 </svg>
