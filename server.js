@@ -78,6 +78,8 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_observed_fcp = lhr.audits.metrics.details.items[0].observedFirstContentfulPaint;
   var lhr_fmp = lhr.audits.metrics.details.items[0].firstMeaningfulPaint;
   var lhr_observed_fmp = lhr.audits.metrics.details.items[0].observedFirstMeaningfulPaint;
+  var lhr_si = lhr.audits.metrics.details.items[0].speedIndex;
+  var lhr_observed_si = lhr.audits.metrics.details.items[0].observedSpeedIndex;
   var lhr_interactive = lhr.audits.metrics.details.items[0].interactive;
   var lhr_screenshots = lhr.audits['screenshot-thumbnails'] && lhr.audits['screenshot-thumbnails'].details ? lhr.audits['screenshot-thumbnails'].details.items : [];
   var lhr_network = lhr.audits['network-requests'].details.items;
@@ -85,8 +87,7 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_pwa_score = lhr.categories.pwa.score;
   var lhr_has_sw = lhr.audits['service-worker'].rawValue;
   var lhr_has_a2hs = lhr.audits['webapp-install-banner'].rawValue;
-  var lhr_has_http2 = lhr.audits['uses-http2'] ? lhr.audits['uses-http2'].rawValue : false;
-  var lhr_has_https = lhr.audits['is-on-https'].rawValue;
+  var lhr_has_https = lhr.audits['is-on-https'].score;
   var lhr_has_offline = lhr.audits['works-offline'].rawValue;
   var lhr_bootup_time = lhr.audits['bootup-time'] && lhr.audits['bootup-time'].details ? lhr.audits['bootup-time'].details.items : [];
 
@@ -100,14 +101,15 @@ app.get('/gamestate.json', async(request, response) => {
   // merge several of the byteefficiency audits in a general 'wasted' hashmap
   var wasted = getWasted(lhr.audits);
 
-  console.log('Lighthouse  finished, fcp: ' + lhr_fcp + ' - FMP: ' + lhr_fmp + ' - TTI: ' + lhr_interactive);
-  console.log('Lighthouse  observed, fcp: ' + lhr_observed_fcp + ' - FMP: ' + lhr_observed_fmp + ' - TTI: ' + lhr_interactive);
+  console.log('Lighthouse  finished, fcp: ' + lhr_fcp + ' - FMP: ' + lhr_fmp + " - SI: " + lhr_si + ' - TTI: ' + lhr_interactive);
+  console.log('Lighthouse  observed, fcp: ' + lhr_observed_fcp + ' - FMP: ' + lhr_observed_fmp+ " - SI: " + lhr_observed_si +  + ' - TTI: ' + lhr_interactive);
 
   // now segment resource loading into levels based on performance metrics
   var resources1 = [];
   var resources2 = [];
   var resources3 = [];
   var resources4 = [];
+  var resources5 = [];
   var lastResTime;
   for (i = 0; i < lhr_network.length; i++) {
     var res = lhr_network[i];
@@ -130,12 +132,16 @@ app.get('/gamestate.json', async(request, response) => {
       resources2.push(res);
       res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
       res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
-    } else if (res.endTime * (lhr_fmp / lhr_observed_fmp) < lhr_interactive) {
+    } else if (res.endTime < lhr_observed_si) {
       resources3.push(res);
+      res.startTime = res.startTime * (lhr_si / lhr_observed_si);
+      res.endTime = res.endTime * (lhr_si / lhr_observed_si);
+    } else if (res.endTime * (lhr_fmp / lhr_observed_fmp) < lhr_interactive) {
+      resources4.push(res);
       res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
       res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
     } else {
-      resources4.push(res);
+      resources5.push(res);
       res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
       res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
       lastResTime = res.endTime;
@@ -148,20 +154,22 @@ app.get('/gamestate.json', async(request, response) => {
     if (shot.timing < lhr_fcp) {
       shot.timing = shot.timing * (lhr_fcp / lhr_observed_fcp);
     } else {
-      shot.timing = shot.timing * (lhr_fmp / lhr_observed_fmp);
+      shot.timing = shot.timing * (lhr_si / lhr_observed_si);
     }
   }
 
   var levels = [];
   var level1 = {name: 'First Contentful Paint', resources: resources1, time: lhr_fcp};
   var level2 = {name: 'First Meaningful Paint', resources: resources2, time: lhr_fmp};
-  var level3 = {name: 'Interactive', resources: resources3, time: lhr_interactive};
-  var level4 = {name: 'Full Load', resources: resources4, time: lastResTime};
+  var level3 = {name: 'Visually Complete', resources: resources3, time: lhr_fmp};
+  var level4 = {name: 'Interactive', resources: resources4, time: lhr_interactive};
+  var level5 = {name: 'Full Load', resources: resources5, time: lastResTime};
   // only add levels with resources in them
   if (resources1.length > 0) levels.push(level1);
   if (resources2.length > 0) levels.push(level2);
   if (resources3.length > 0) levels.push(level3);
   if (resources4.length > 0) levels.push(level4);
+  if (resources5.length > 0) levels.push(level5);
   // fix the numbering, and add in statsitics
   for (i = 0; i < levels.length; i++) {
     levels[i].levelNumber = (i + 1);
@@ -169,19 +177,35 @@ app.get('/gamestate.json', async(request, response) => {
   }
 
   // create some goodies
-  var goodies = [];
+  var powerups = [];
   var is_pwa = lhr_pwa_score > 0.7;
-  // if it's not a full PWA we'll reward the individual features at least
-  if (!is_pwa) {
-    addGoodie(goodies, lhr_has_sw, 'ServiceWorker registered', 'shoot-rate', lhr_interactive);
-    addGoodie(goodies, lhr_has_a2hs, 'Add-To-Homescreen', 'extra-life', lhr_interactive);
-    addGoodie(goodies, lhr_has_offline, 'Offline Mode', 'extra-life', lhr_interactive);
-  } else {
-    addGoodie(goodies, is_pwa, 'Progressive Web App', 'bomb', lhr_interactive);
+  if(lhr_has_https === 1) {
+    addPowerup(powerups, 'Page is secure', 'pwa_secure', 'shield', lastResTime);
   }
-  addGoodie(goodies, lhr_has_http2, 'HTTP2 enabled', 'extra-life', lhr_interactive);
-  addGoodie(goodies, lhr_has_https, 'Page is secure', 'shield', lhr_interactive);
-
+  // the pwa ones are more complicated - get the groups of audits first
+  var pwa_groups = {};
+  if(lhr.categories['pwa'] && lhr.categories['pwa'].auditRefs)
+  var pwa_audits = lhr.categories['pwa'].auditRefs;
+  for(var i = 0; i < pwa_audits.length; i++) {
+    var audit = pwa_audits[i];
+    if(!audit.group) continue;
+    if(!(audit.group in pwa_groups)) pwa_groups[audit.group] = [];
+    pwa_groups[audit.group].push(audit.id);
+  }
+  // now check if all audits are fulfilled, if yes create the goodie
+  for(var group_name in pwa_groups) {
+    var success = true;
+    var audits = pwa_groups[group_name];
+    for(var i = 0; i < audits.length; i++) {
+      if(!lhr.audits[audits[i]] || lhr.audits[audits[i]].score < 1) success = false;
+    }
+    if(success) {
+      if(group_name.indexOf('reliable') >= 0) addPowerup(powerups, group_name, 'pwa_reliable', 'extra-life', lastResTime);
+      if(group_name.indexOf('installable') >= 0) addPowerup(powerups, group_name, 'pwa_installable', 'shoot-rate', lastResTime);
+      if(group_name.indexOf('optimized') >= 0) addPowerup(powerups, group_name, 'pwa_optimized', 'bomb', lastResTime);
+    }
+  }
+  console.log(JSON.stringify(powerups));
 
   // finalize gamestate
   var gameplay = {
@@ -189,7 +213,7 @@ app.get('/gamestate.json', async(request, response) => {
     lhr_pwa_score: lhr_pwa_score,
     lhr_screenshots: lhr_screenshots,
     levels: levels,
-    goodies: goodies,
+    powerups: powerups,
   };
 
   // console.log(JSON.stringify(gameplay, null, 4));
@@ -215,15 +239,14 @@ function calcLevelStatistics(level){
   level.bootupTime = bootupTime;
 }
 
-function addGoodie(goodies, flag, name, goodieToGive, gameDuration) {
-  if (flag) {
-    var randomTime = parseInt(Math.random() * gameDuration, 10);
-    goodies.push({
-      name: name, // name of the goodie, will be displayed on client side
-      type: goodieToGive, // goodie name, will be resolved to the goodie on client side
-      time: randomTime, // time to hand out the goodie in the game - random between start and end
-    });
-  }
+function addPowerup(powerups, name, asset, type, gameDuration) {
+  var randomTime = parseInt(Math.random() * 3000, 10);
+  powerups.push({
+    name: name, // name of the goodie, will be displayed on client side
+    asset: asset, // the iamge asset to show
+    type: type, // goodie name, will be resolved to the goodie on client side
+    time: randomTime, // time to hand out the goodie in the game - random between start and end
+  });
 }
 
 function getWasted(audits) {
