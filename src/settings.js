@@ -51,6 +51,7 @@ settings.hints = [
   'A green asteroid means more than 85% of the resource is used.',
   'An orange asteroid means less than 85% of the resource is used.',
   'A red asteroid means less than 50% of the resource is used.',
+  'On the upper left you can see the current visual state of the website.',
   'If your site can be installed, a powerup for faster fire rate is enabled.',
   'If your site is secure, a shield powerup will show up.',
   'A full PWA enables a powerup to destroy all asteroids at once.',
