@@ -132,7 +132,8 @@ function preload() {
   game.load.image('asteroid_red', 'img/asteroid_red.png');
   game.load.image('asteroid_neutral', 'img/asteroid_neutral.png');
   game.load.image('asteroid_orange', 'img/asteroid_orange.png');
-  game.load.image('bullet', 'img/bullets.png');
+  game.load.image('bullet', 'img/bullet.png');
+  game.load.image('bullet_strong', 'img/bullet_strong.png');
   game.load.image('ship', 'img/ship.png');
   game.load.image('heart', 'img/heart.png');
   game.load.image('popupBg', 'img/popup.png');
@@ -141,6 +142,7 @@ function preload() {
   game.load.image('pwa_reliable', 'img/pwa_reliable.png');
   game.load.image('pwa_installable', 'img/pwa_installable.png');
   game.load.image('pwa_optimized', 'img/pwa_optimized.png');
+  game.load.image('seo_optimized', 'img/seo_powerup.png');
   game.load.image('ship_shielded', 'img/ship_shielded.png');
   game.load.image('pwa_logo', 'img/pwa_logo.png');
   game.load.image('sw_logo', 'img/sw_logo.png');
@@ -152,9 +154,6 @@ function create() {
   //  This will run in Canvas mode, so let's gain a little speed and display
   game.renderer.clearBeforeRender = true;
   game.renderer.roundPixels = true;
-
-  //  A nice background
-  // game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
   //  We need arcade physics
   game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -181,6 +180,7 @@ function create() {
   ship.width = 30;
   ship.health = 3; // 3 lives
   ship.shoot_delay = 300;
+  ship.shoot_strength = 10; // correspods to download rate in kb
 
   // Screenshot of the loading progress
   screenshot = game.add.sprite(0, 0, 'screenshot');
@@ -217,7 +217,7 @@ function create() {
   hitEmitter.minParticleScale = 0.05;
   hitEmitter.setAlpha(0, 1);
 
-  powerups.initPowerups(game, asteroids, ship);
+  powerups.initPowerups(game, asteroids, ship, bullets);
 
   document.body.addEventListener('touchend', function() {
     if (!game.paused) fireBullet();
@@ -340,7 +340,7 @@ function update() {
 
 //  Called if the bullet hits one of the veg sprites
 function asteroidHit(bullet, asteroid) {
-  asteroid.health -= 10; // every bullet represents 10kb download right now
+  asteroid.health -= ship.shoot_strength; // every bullet represents x kb download
   bullet.kill();
   if (!asteroid.floatLabel || asteroid.floatLabel.alpha < 0.5) {
     commons.createFloatingLabel(game, asteroid.label, asteroid.x, asteroid.y, asteroid);

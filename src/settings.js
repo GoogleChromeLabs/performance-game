@@ -41,7 +41,9 @@ if (common.isMobile()) settings = mobileSettings;
 else settings = desktopSettings;
 
 settings.hints = [
-  'This game visualizes the loading process of a website as game.',
+  'This game visualizes the loading process of a website.',
+  'It will help to identify performance bottlenecks and problems.',
+  'The gameplay is built from a Google Lighthouse audit.',
   'Every level represents one reached performance metric.',
   'Every asteroid represents one loaded resource.',
   'Every shot represents a 10kb download.',
@@ -49,9 +51,9 @@ settings.hints = [
   'A green asteroid means more than 85% of the resource is used.',
   'An orange asteroid means less than 85% of the resource is used.',
   'A red asteroid means less than 50% of the resource is used.',
-  'An active service worker gives faster fire rate.',
-  'Active HTTPS will give you a shield.',
-  'A well-built PWA gives you a powerup to destroy all asteroids at once',
+  'If your site can be installed, a powerup for faster fire rate is enabled.',
+  'If your site is secure, a shield powerup will show up.',
+  'A full PWA enables a powerup to destroy all asteroids at once.',
 ];
 
 module.exports.settings = settings;

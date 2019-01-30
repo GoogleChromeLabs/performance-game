@@ -65,8 +65,7 @@ module.exports = {
       defaultAttribute: 'async',
     }),
     new Critters({
-      fonts: true,
-      preload: 'swap',
+      fonts: true
     }),
   ],
 };

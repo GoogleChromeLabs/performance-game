@@ -91,10 +91,12 @@ function setupDialogs(gameStartFct) {
 
     var elem = document.getElementById('url');
     var btn = document.getElementById('start_btn');
+    var error_lbl = document.getElementById('input_error_lbl');
     btn.onclick = gameStartFct;
-    // enable disble button depending on if input is valid
+    // enable/disable button and show error label depending on if input is valid
     elem.oninput = function(e) {
       btn.disabled = !elem.validity.valid;
+      error_lbl.style.display = elem.validity.valid ? "none": "block";
     };
     // enter on input triggers button
     elem.addEventListener('keyup', function(e){
