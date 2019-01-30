@@ -21,15 +21,15 @@
      inkscape:snap-global="false"
      inkscape:window-maximized="0"
      inkscape:window-y="0"
-     inkscape:window-x="13"
-     inkscape:window-height="856"
-     inkscape:window-width="1440"
+     inkscape:window-x="1"
+     inkscape:window-height="1041"
+     inkscape:window-width="1760"
      showgrid="true"
      inkscape:current-layer="g15751"
      inkscape:document-units="mm"
-     inkscape:cy="349.7561"
-     inkscape:cx="-675.51981"
-     inkscape:zoom="0.73615912"
+     inkscape:cy="430.66712"
+     inkscape:cx="-1382.7687"
+     inkscape:zoom="0.52054311"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
@@ -795,5 +795,56 @@
          x="-110.49123"
          y="27.506001"
          style="stroke-width:0.80883354;fill:#51b555;fill-opacity:1"></tspan></text>
+    <g
+       inkscape:export-ydpi="26.540001"
+       inkscape:export-xdpi="26.540001"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/pwa_reliable.png"
+       style="fill:none;fill-rule:nonzero"
+       transform="matrix(2.0833333,0,0,2.0833333,-288.95634,-131.53359)"
+       id="g943">
+      <circle
+         style="fill:#febd4e;fill-opacity:0.74901962"
+         cx="12"
+         cy="12"
+         r="12"
+         id="circle939"
+         inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/seo_powerup.png"
+         inkscape:export-xdpi="26.540001"
+         inkscape:export-ydpi="26.540001" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:5.07999992px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ef2e09;fill-opacity:1;stroke:none;stroke-width:0.127;"
+         x="2.3654454"
+         y="15.081983"
+         id="text947"
+         inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/seo_powerup.png"
+         inkscape:export-xdpi="26.540001"
+         inkscape:export-ydpi="26.540001"><tspan
+           sodipodi:role="line"
+           id="tspan945"
+           x="2.3654454"
+           y="15.081983"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.46666718px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';stroke-width:0.127;fill:#ef2e09;fill-opacity:1;">SEO</tspan></text>
+    </g>
+    <circle
+       style="opacity:1;fill:#36c504;fill-opacity:0.74901962;stroke:none;stroke-width:1.03299999;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0"
+       id="path921"
+       cx="-163.72513"
+       cy="189.15863"
+       r="9.9115238"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/bullet_strong.png"
+       inkscape:export-xdpi="7.6880207"
+       inkscape:export-ydpi="7.6880207"
+       transform="scale(1,-1)" />
+    <circle
+       transform="scale(1,-1)"
+       inkscape:export-ydpi="7.6880207"
+       inkscape:export-xdpi="7.6880207"
+       inkscape:export-filename="/Users/mschierle/github/performance-game/public/img/bullet.png"
+       r="9.9115238"
+       cy="199.3243"
+       cx="-130.68672"
+       id="circle923"
+       style="opacity:1;fill:#f30012;fill-opacity:0.99526066;stroke:none;stroke-width:1.03299999;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0" />
   </g>
 </svg>

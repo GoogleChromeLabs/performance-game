@@ -59,7 +59,6 @@ limitations under the License.
         background-position: 0 0, 20px 50px, 120px 280px, 60px 110px, 400px 500px;
       }
 
-
       #noscript {
         font-size: 200%;
         font-style: bold;
@@ -76,8 +75,16 @@ limitations under the License.
           text-align: center;
       }
 
+      #input_label {
+        color: #ffffff;
+      }
+
       #input_error_lbl {
-        color: white;
+        color: #6c0000;
+      }
+
+      #url {
+        color: #ffffff;
       }
 
 
@@ -105,7 +112,7 @@ limitations under the License.
      }
 
      #infoPopup, #tablePopup, #gameEndPopup, #urlInputDialog, #loadingPopup {
-       background-color: #bd6a1d;
+       background-color: #a55b17;
        border-radius: 25px;
        border: 6px solid #833f00;
        padding: 20px;
@@ -140,8 +147,9 @@ limitations under the License.
      #install_btn:disabled, #share_btn:disabled, #replay_btn:disabled,
      #report_btn:disabled, #start_btn:disabled, #info_close_btn:disabled,
      #table_close_btn:disabled, #loading_close_btn:disabled {
-       color: #666666;
+       color: #919191;
        margin: 5px;
+       opacity: 0.4;
      }
 
     #loadingPopup td {
@@ -163,8 +171,8 @@ limitations under the License.
                required pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
                title="Please enter a valid URL"
                id="url">
-        <span class="mdl-textfield__error" id="input_error_lbl">URLs only</span>
-        <label class="mdl-textfield__label" for="url">URL to play</label>
+        <span class="mdl-textfield__error" id="input_error_lbl" style="display:none;">URLs only</span>
+        <label class="mdl-textfield__label" for="url" id="input_label">URL to play</label>
        </div>
       <div class="mdl-dialog__actions">
         <button type="button" disabled class="mdl-button" id="start_btn">Play</button>

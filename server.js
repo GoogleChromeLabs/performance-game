@@ -25,7 +25,7 @@ const helmet = require('helmet');
 const app = express();
 
 const API_KEY = null;
-const PSI_REST_API = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed?category=performance&category=best-practices&category=pwa&strategy=mobile';
+const PSI_REST_API = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed?category=performance&category=seo&category=best-practices&category=pwa&strategy=mobile';
 
 // enable compression
 app.use(compression());
@@ -85,6 +85,7 @@ app.get('/gamestate.json', async(request, response) => {
   var lhr_network = lhr.audits['network-requests'].details.items;
   var lhr_perf_score = lhr.categories.performance.score;
   var lhr_pwa_score = lhr.categories.pwa.score;
+  var lhr_seo_score = lhr.categories.seo.score
   var lhr_has_sw = lhr.audits['service-worker'].rawValue;
   var lhr_has_a2hs = lhr.audits['webapp-install-banner'].rawValue;
   var lhr_has_https = lhr.audits['is-on-https'].score;
@@ -178,7 +179,6 @@ app.get('/gamestate.json', async(request, response) => {
 
   // create some goodies
   var powerups = [];
-  var is_pwa = lhr_pwa_score > 0.7;
   if(lhr_has_https === 1) {
     addPowerup(powerups, 'Page is secure', 'pwa_secure', 'shield', lastResTime);
   }
@@ -193,6 +193,9 @@ app.get('/gamestate.json', async(request, response) => {
     pwa_groups[audit.group].push(audit.id);
   }
   // now check if all audits are fulfilled, if yes create the goodie
+  var pwa_reliable = false;
+  var pwa_optimized = false;
+  var pwa_installable = false;
   for(var group_name in pwa_groups) {
     var success = true;
     var audits = pwa_groups[group_name];
@@ -200,17 +203,23 @@ app.get('/gamestate.json', async(request, response) => {
       if(!lhr.audits[audits[i]] || lhr.audits[audits[i]].score < 1) success = false;
     }
     if(success) {
-      if(group_name.indexOf('reliable') >= 0) addPowerup(powerups, group_name, 'pwa_reliable', 'extra-life', lastResTime);
-      if(group_name.indexOf('installable') >= 0) addPowerup(powerups, group_name, 'pwa_installable', 'shoot-rate', lastResTime);
-      if(group_name.indexOf('optimized') >= 0) addPowerup(powerups, group_name, 'pwa_optimized', 'bomb', lastResTime);
+      pwa_reliable = group_name.indexOf('reliable') >= 0;
+      pwa_installable = group_name.indexOf('installable') >= 0;
+      pwa_optimized = group_name.indexOf('optimized') >= 0;
     }
   }
+  if(pwa_reliable) addPowerup(powerups, "Fast and Reliable Site - Extra-Life", 'pwa_reliable', 'extra-life', lastResTime);
+  if(pwa_installable) addPowerup(powerups, "Installable PWA - Fast Shoot Rate", 'pwa_installable', 'shoot-rate', lastResTime);
+  if(pwa_optimized && pwa_installable && pwa_reliable) addPowerup(powerups, "Full PWA - SuperBomb", 'pwa_optimized', 'bomb', lastResTime);
+  if(lhr_seo_score === 1) addPowerup(powerups, "Full SEO Score - stronger shots", 'seo_optimized', 'stronger-shots', lastResTime);
+
   console.log(JSON.stringify(powerups));
 
   // finalize gamestate
   var gameplay = {
     lhr_perf_score: lhr_perf_score,
     lhr_pwa_score: lhr_pwa_score,
+    lhr_seo_score: lhr_seo_score,
     lhr_screenshots: lhr_screenshots,
     levels: levels,
     powerups: powerups,
@@ -240,11 +249,12 @@ function calcLevelStatistics(level){
 }
 
 function addPowerup(powerups, name, asset, type, gameDuration) {
-  var randomTime = parseInt(Math.random() * 3000, 10);
+  var randomTime = parseInt(Math.random() * 3000, 10); // get powerups in early for debugging
+  //var randomTime = parseInt(Math.random() * gameDuration, 10);
   powerups.push({
-    name: name, // name of the goodie, will be displayed on client side
-    asset: asset, // the iamge asset to show
-    type: type, // goodie name, will be resolved to the goodie on client side
+    name: name, // name of the powerup, will be displayed on client side as label
+    asset: asset, // the image asset to show
+    type: type, // powerup type, determines what this powerup will do for user
     time: randomTime, // time to hand out the goodie in the game - random between start and end
   });
 }

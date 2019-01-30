@@ -27,11 +27,13 @@ var game;
 var asteroids;
 var ship;
 var powerups;
+var bullets;
 
-function initPowerups(gameParam, asteroidsParam, shipParam) {
+function initPowerups(gameParam, asteroidsParam, shipParam, bulletsParam) {
   game = gameParam;
   asteroids = asteroidsParam;
   ship = shipParam;
+  bullets = bulletsParam;
 
   powerups = game.add.group();
   powerups.enableBody = true;
@@ -72,6 +74,11 @@ function shipHitPowerup(ship, powerupSprite) {
     }
   } else if (powerup.type === 'shoot-rate') {
     ship.shoot_delay = 100;
+  } else if (powerup.type === 'stronger-shots') {
+    ship.shoot_strength = 30;
+    for (var i = bullets.children.length - 1; i >= 0; i--) {
+      bullets.children[i].loadTexture("bullet_strong");
+    }
   }
   commons.createFloatingLabel(game, powerup.name, powerupSprite.x, powerupSprite.y, powerupSprite);
 }
