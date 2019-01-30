@@ -47,13 +47,14 @@ settings.hints = [
   'Every level represents one reached performance metric.',
   'Every asteroid represents one loaded resource.',
   'Every shot represents a 10kb download.',
-  'Color of an asteroid repesents how much of the resource was used.',
+  'The color of an asteroid repesents how much of the resource was used.',
   'A green asteroid means more than 85% of the resource is used.',
   'An orange asteroid means less than 85% of the resource is used.',
   'A red asteroid means less than 50% of the resource is used.',
   'If your site can be installed, a powerup for faster fire rate is enabled.',
   'If your site is secure, a shield powerup will show up.',
   'A full PWA enables a powerup to destroy all asteroids at once.',
+  'A full Lighthouse SEO score makes your shots stronger.'
 ];
 
 module.exports.settings = settings;
