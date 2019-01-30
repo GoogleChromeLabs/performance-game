@@ -249,8 +249,8 @@ function calcLevelStatistics(level){
 }
 
 function addPowerup(powerups, name, asset, type, gameDuration) {
-  var randomTime = parseInt(Math.random() * 3000, 10); // get powerups in early for debugging
-  //var randomTime = parseInt(Math.random() * gameDuration, 10);
+  //var randomTime = parseInt(Math.random() * 3000, 10); // get powerups in early for debugging
+  var randomTime = parseInt(Math.random() * 0.6 * gameDuration, 10); // get powerups during the first 2/3 of the game
   powerups.push({
     name: name, // name of the powerup, will be displayed on client side as label
     asset: asset, // the image asset to show

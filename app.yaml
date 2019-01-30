@@ -13,4 +13,5 @@
 
 # [START app_yaml]
 runtime: nodejs8
+instance_class: F2
 # [END app_yaml]
