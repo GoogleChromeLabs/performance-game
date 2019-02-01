@@ -30,6 +30,7 @@ module.exports = {
   isDetailsPopupShowing: isDetailsPopupShowing,
   showGameEndPopup: showGameEndPopup,
   setGame: setGame,
+  isDialogShowing: isDialogShowing,
 };
 
 var game;
@@ -112,6 +113,14 @@ function setupDialogs(gameStartFct) {
   });
 }
 
+function isDialogShowing() {
+  var dialogs = document.querySelectorAll('dialog');
+  for (var i = 0; i < dialogs.length; i++) {
+    if(dialogs[i].open) return true;
+  }
+  return false;
+}
+
 
 function showInfoPopup(game, title, text = '', closable = true) {
   if (!text) text = '';
@@ -131,6 +140,7 @@ function showInfoPopup(game, title, text = '', closable = true) {
 
 function closeInfoPopup() {
   document.getElementById('infoPopup').close();
+  if (game && game.isBooted) game.paused = false;
 }
 
 function showLoadingPopup(game, title, hints) {

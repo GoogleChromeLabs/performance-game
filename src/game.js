@@ -246,6 +246,10 @@ function update() {
 
   if (cursors.up.isDown) {
     game.physics.arcade.accelerationFromRotation(ship.rotation, 200, ship.body.acceleration);
+    // unpause game - temp workaround, sometimes the game seems stuck for no reason
+    if(game && game.isBooted && !dialogs.isDialogShowing() && game.paused) {
+      game.paused = false;
+    }
   } else {
     ship.body.acceleration.set(0);
   }
@@ -263,6 +267,9 @@ function update() {
     if (Date.now() - lastShotTime > ship.shoot_delay) {
       fireBullet();
       lastShotTime = Date.now();
+      if(game && game.isBooted && !dialogs.isDialogShowing() && game.paused) {
+        game.paused = false;
+      }
     }
 
   }
