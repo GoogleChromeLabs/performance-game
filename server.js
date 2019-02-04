@@ -49,9 +49,28 @@ app.get('/index.html', (req, res) => {
 // All this will be used to create a level to play through
 app.get('/gamestate.json', async(request, response) => {
 
+  var targetUrl = request.query.url;
+  // get the url after redirects
+  try {
+      const res = await fetch(targetUrl);
+      var status = res.status;
+      if(status === 200) {
+        targetUrl = res.url;
+      }
+      else {
+        console.error("Invalid target url: " + targetUrl);
+        response.status(500).send("Invalid URL: " + targetUrl);
+		    return;
+      }
+    } catch (err) {
+      console.error(err);
+      response.status(500).send("Invalid URL: " + err.message);
+      return;
+    }
+
   // construct rest api url
   var api_url = PSI_REST_API;
-  api_url += '&url=' + request.query.url;
+  api_url += '&url=' + targetUrl;
   if (API_KEY) {
     api_url += '&key=' + API_KEY;
   }
