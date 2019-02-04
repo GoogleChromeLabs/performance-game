@@ -31,6 +31,7 @@ module.exports = {
   showGameEndPopup: showGameEndPopup,
   setGame: setGame,
   isDialogShowing: isDialogShowing,
+  setInfoCloseFct: setInfoCloseFct,
 };
 
 var game;
@@ -110,6 +111,15 @@ function setupDialogs(gameStartFct) {
     document.getElementById('report_btn').onclick = commons.seeReport;
 
     document.getElementById('urlInputDialog').showModal();
+  });
+}
+
+function setInfoCloseFct(fct){
+  var closebtn1 = document.querySelector('#info_close_btn');
+  closebtn1.addEventListener('click', fct);
+  closebtn1.addEventListener('keyup', function(e){
+    if (e.keyCode === 13)
+      fct();
   });
 }
 

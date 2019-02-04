@@ -122,9 +122,20 @@ function getGamestateAndStart() {
     clearInterval(hintInterval);
     console.log('There has been a problem with your fetch operation: ', error.message);
     console.trace(error);
+    dialogs.setInfoCloseFct(function() {document.location.href = '/';});
     dialogs.showInfoPopup(game, "Sorry, we couldn't load this URL right now. Please try a different URL, or come back later.");
   });
 }
+
+/**
+Something is off with the pausing
+**/
+function unpauseFix() {
+  if(game && game.isBooted && dialogs && !dialogs.isDialogShowing() && game.paused) {
+    game.paused = false;
+  }
+}
+setInterval(unpauseFix, 3000);
 
 function preload() {
   game.load.crossOrigin = 'Anonymous';
@@ -226,7 +237,7 @@ function create() {
   // motion info
   window.addEventListener('deviceorientation', handleOrientation, true);
 
-  game.paused = true;
+  game.paused = dialogs.isDialogShowing();
 }
 
 function handleOrientation(e) {
@@ -246,10 +257,6 @@ function update() {
 
   if (cursors.up.isDown) {
     game.physics.arcade.accelerationFromRotation(ship.rotation, 200, ship.body.acceleration);
-    // unpause game - temp workaround, sometimes the game seems stuck for no reason
-    if(game && game.isBooted && !dialogs.isDialogShowing() && game.paused) {
-      game.paused = false;
-    }
   } else {
     ship.body.acceleration.set(0);
   }
@@ -267,9 +274,6 @@ function update() {
     if (Date.now() - lastShotTime > ship.shoot_delay) {
       fireBullet();
       lastShotTime = Date.now();
-      if(game && game.isBooted && !dialogs.isDialogShowing() && game.paused) {
-        game.paused = false;
-      }
     }
 
   }
