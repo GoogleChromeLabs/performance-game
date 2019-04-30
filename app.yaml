@@ -14,4 +14,6 @@
 # [START app_yaml]
 runtime: nodejs8
 instance_class: F2
+automatic_scaling:
+  max_concurrent_requests: 5
 # [END app_yaml]

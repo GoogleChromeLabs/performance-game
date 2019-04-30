@@ -20,6 +20,8 @@ const compression = require('compression');
 const express = require('express');
 const fetch = require('node-fetch');
 const helmet = require('helmet');
+const {BigQuery} = require('@google-cloud/bigquery');
+const url = require('url');
 
 // create express server
 const app = express();
@@ -68,29 +70,23 @@ app.get('/gamestate.json', async(request, response) => {
       return;
     }
 
-  // construct rest api url
-  var api_url = PSI_REST_API;
-  api_url += '&url=' + targetUrl;
-  if (API_KEY) {
-    api_url += '&key=' + API_KEY;
+  console.log("TargetURL: " + targetUrl);
+
+  let path = url.parse(targetUrl).path;
+  var lhr;
+  if(!path || path === "" || path === "/") {
+    try {
+      lhr = await getLighthouseFromBigquery(targetUrl);
+    }
+    catch(e){
+      console.log(e.message);
+    }
   }
 
-  // get the lighthouse report
-  var status;
-  var json;
-
-  try {
-    const res = await fetch(api_url);
-    status = res.status;
-    json = await res.json();
-  } catch (err) {
-    // handle error for example:
-    console.error(err);
+  if(!lhr) {
+    lhr = await getLighthouseFromPSI(targetUrl);
   }
-  console.log(status + '   --    ' + JSON.stringify(json).substring(0, 200));
-
-
-  var lhr = json.lighthouseResult;
+  const appliedThrottling = lhr.configSettings.throttlingMethod === "provided";
 
   // get the audit results from lighthouse
   var lhr_fcp = lhr.audits.metrics.details.items[0].firstContentfulPaint;
@@ -144,37 +140,57 @@ app.get('/gamestate.json', async(request, response) => {
     res.bootupTime = bootupHash[res.url] ? bootupHash[res.url] : 0;
     res.coverage = wasted[res.url] ? wasted[res.url].coverage : 100;
     res.wastedSize = wasted[res.url] ? wasted[res.url].wastedSize : 0;
-    if (res.endTime < lhr_observed_fcp) {
-      resources1.push(res);
-      res.startTime = res.startTime * (lhr_fcp / lhr_observed_fcp);
-      res.endTime = res.endTime * (lhr_fcp / lhr_observed_fcp);
-    } else if (res.endTime < lhr_observed_fmp) {
-      resources2.push(res);
-      res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
-      res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
-    } else if (res.endTime < lhr_observed_si) {
-      resources3.push(res);
-      res.startTime = res.startTime * (lhr_si / lhr_observed_si);
-      res.endTime = res.endTime * (lhr_si / lhr_observed_si);
-    } else if (res.endTime * (lhr_fmp / lhr_observed_fmp) < lhr_interactive) {
-      resources4.push(res);
-      res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
-      res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
-    } else {
-      resources5.push(res);
-      res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
-      res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
-      lastResTime = res.endTime;
+
+    if(appliedThrottling) {
+      if (res.endTime < lhr_observed_fcp) {
+        resources1.push(res);
+      } else if (res.endTime < lhr_observed_fmp) {
+        resources2.push(res);
+      } else if (res.endTime < lhr_observed_si) {
+        resources3.push(res);
+      } else if (res.endTime < lhr_interactive) {
+        resources4.push(res);
+      } else {
+        resources5.push(res);
+        lastResTime = res.endTime;
+      }
+    }
+    else {
+      if (res.endTime < lhr_observed_fcp) {
+        resources1.push(res);
+        res.startTime = res.startTime * (lhr_fcp / lhr_observed_fcp);
+        res.endTime = res.endTime * (lhr_fcp / lhr_observed_fcp);
+      } else if (res.endTime < lhr_observed_fmp) {
+        resources2.push(res);
+        res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
+        res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
+      } else if (res.endTime < lhr_observed_si) {
+        resources3.push(res);
+        res.startTime = res.startTime * (lhr_si / lhr_observed_si);
+        res.endTime = res.endTime * (lhr_si / lhr_observed_si);
+      } else if (res.endTime * (lhr_fmp / lhr_observed_fmp) < lhr_interactive) {
+        resources4.push(res);
+        res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
+        res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
+      } else {
+        resources5.push(res);
+        res.startTime = res.startTime * (lhr_fmp / lhr_observed_fmp);
+        res.endTime = res.endTime * (lhr_fmp / lhr_observed_fmp);
+        lastResTime = res.endTime;
+      }
     }
   }
 
+
   // fix screenshot timings as well
-  for (i = 0; i < lhr_screenshots.length; i++) {
-    var shot = lhr_screenshots[i];
-    if (shot.timing < lhr_fcp) {
-      shot.timing = shot.timing * (lhr_fcp / lhr_observed_fcp);
-    } else {
-      shot.timing = shot.timing * (lhr_si / lhr_observed_si);
+  if(!appliedThrottling) {
+    for (i = 0; i < lhr_screenshots.length; i++) {
+      var shot = lhr_screenshots[i];
+      if (shot.timing < lhr_fcp) {
+        shot.timing = shot.timing * (lhr_fcp / lhr_observed_fcp);
+      } else {
+        shot.timing = shot.timing * (lhr_si / lhr_observed_si);
+      }
     }
   }
 
@@ -232,7 +248,7 @@ app.get('/gamestate.json', async(request, response) => {
   if(pwa_optimized && pwa_installable && pwa_reliable) addPowerup(powerups, "Full PWA - SuperBomb", 'pwa_optimized', 'bomb', lastResTime);
   if(lhr_seo_score === 1) addPowerup(powerups, "Full SEO Score - stronger shots", 'seo_optimized', 'stronger-shots', lastResTime);
 
-  console.log(JSON.stringify(powerups));
+  console.log("Powerups: " + JSON.stringify(powerups));
 
   // finalize gamestate
   var gameplay = {
@@ -303,6 +319,54 @@ function getWasted(audits) {
   }
   return wastedList;
 }
+
+async function getLighthouseFromBigquery(url) {
+    console.log("Getting lighthouse from httparchive for url: " + url);
+    const bigqueryClient = new BigQuery();
+
+    const query = "select report FROM `httparchive.lighthouse.2019_03_01_mobile` WHERE report IS NOT NULL and url = '" + url + "'";
+    const options = {
+      query: query,
+      location: 'US',
+    };
+
+    const [job] = await bigqueryClient.createQueryJob(options);
+    console.log(`Job ${job.id} started.`);
+
+    const [rows] = await job.getQueryResults();
+
+    if(rows && rows.length > 0) {
+      let report = JSON.parse(rows[0].report);
+      console.log("From httparchvie: " + JSON.stringify(report).substring(0, 200));
+      return report;
+    }
+    else return null;
+  }
+
+  async function getLighthouseFromPSI(url) {
+    console.log("Getting lighthouse from PSI API for url: " + url);
+    // construct rest api url
+    var api_url = PSI_REST_API;
+    api_url += '&url=' + url;
+    if (API_KEY) {
+      api_url += '&key=' + API_KEY;
+    }
+
+    // get the lighthouse report
+    var status;
+    var json;
+
+    try {
+      const res = await fetch(api_url);
+      status = res.status;
+      json = await res.json();
+    } catch (err) {
+      console.error(err);
+    }
+    console.log("From PSI API: " + status + '   --    ' + JSON.stringify(json).substring(0, 200));
+
+    return json.lighthouseResult;
+  }
 
 
 app.use(function(req, res, next) {

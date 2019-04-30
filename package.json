@@ -30,7 +30,8 @@
     "expose-loader": "latest",
     "critters-webpack-plugin": "latest",
     "html-webpack-plugin": "latest",
-    "script-ext-html-webpack-plugin": "latest"
+    "script-ext-html-webpack-plugin": "latest",
+    "@google-cloud/bigquery": "latest"
   },
   "engines": {
     "node": "8.x"
