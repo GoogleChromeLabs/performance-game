@@ -230,17 +230,21 @@ function create() {
 
   powerups.initPowerups(game, asteroids, ship, bullets);
 
-  document.body.addEventListener('touchend', function() {
-    if (!game.paused) fireBullet();
+  document.body.addEventListener('touchend', function(e) {
+    if (!game.paused) {
+      game.physics.arcade.moveToPointer(ship, 40);
+      ship.rotation = game.physics.arcade.angleToPointer(ship, e.x, e.y);
+      fireBullet();
+    }
   }, false);
 
   // motion info
-  window.addEventListener('deviceorientation', handleOrientation, true);
+  //window.addEventListener('deviceorientation', handleOrientation, true);
 
   game.paused = dialogs.isDialogShowing();
 }
 
-function handleOrientation(e) {
+/*function handleOrientation(e) {
   if (game.paused) return;
   var x = e.gamma;
   var y = e.beta;
@@ -249,7 +253,7 @@ function handleOrientation(e) {
   ship.body.velocity.x += x;
   ship.body.velocity.y += y;
 
-}
+}*/
 
 function update() {
 
