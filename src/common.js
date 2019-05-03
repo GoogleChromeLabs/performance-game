@@ -106,7 +106,7 @@ function isMobile() {
 function getControlText() {
   var content = "";
   if (isMobile()) {
-    content = 'Control with device movement (tilt!), fire with touch.  Please level device before starting!';
+    content = 'Fire and move with touch.';
   } else {
     content = 'Control with arrow keys, fire with space, close dialogs with Enter!';
   }

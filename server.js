@@ -72,8 +72,10 @@ app.get('/gamestate.json', async(request, response) => {
 
   console.log("TargetURL: " + targetUrl);
 
-  let path = url.parse(targetUrl).path;
+  const parsedURL = url.parse(targetUrl);
+  let path = parsedURL.path;
   var lhr;
+  // if just domain was requested, get it from bigqueray, much faster
   if(!path || path === "" || path === "/") {
     try {
       lhr = await getLighthouseFromBigquery(targetUrl);
@@ -83,9 +85,17 @@ app.get('/gamestate.json', async(request, response) => {
     }
   }
 
+  // otherwise get a live report
   if(!lhr) {
     lhr = await getLighthouseFromPSI(targetUrl);
   }
+  // fallback - get from bigquery just for domain, not full path
+  if(!lhr) {
+    const fallbackURL = parsedURL.protocol + "//" + parsedURL.host;
+    console.log("Falling back to domain only: " + fallbackURL);
+    lhr = await getLighthouseFromBigquery(fallbackURL);
+  }
+
   const appliedThrottling = lhr.configSettings.throttlingMethod === "provided";
 
   // get the audit results from lighthouse
@@ -365,7 +375,8 @@ async function getLighthouseFromBigquery(url) {
     }
     console.log("From PSI API: " + status + '   --    ' + JSON.stringify(json).substring(0, 200));
 
-    return json.lighthouseResult;
+    if(status === 200) return json.lighthouseResult;
+    return null;
   }
 
 
