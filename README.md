@@ -3,7 +3,7 @@ There are many excellent tools, metrics and docs regarding page speed, but these
 
 An early beta is live and can be tried here: 
 
-[g.co/perfgame](g.co/perfgame):
+[g.co/perfgame](https://g.co/perfgame):
 
 
 
