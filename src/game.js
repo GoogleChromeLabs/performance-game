@@ -54,6 +54,10 @@ var heartHeight = 30;
 var gameOver = false;
 var hitEmitter;
 
+var touchOngoing = false;
+var touchX;
+var touchY;
+
 
 var deferredPrompt;
 
@@ -230,18 +234,26 @@ function create() {
 
   powerups.initPowerups(game, asteroids, ship, bullets);
 
-  document.body.addEventListener('touchend', function(e) {
-    if (!game.paused) {
-      game.physics.arcade.moveToPointer(ship, 40);
-      ship.rotation = game.physics.arcade.angleToPointer(ship, e.x, e.y);
-      fireBullet();
-    }
-  }, false);
+
+  document.body.addEventListener('touchstart', handleTouch, false);
+  document.body.addEventListener('touchend', handleTouch, false);
+  document.body.addEventListener('touchmove', handleTouch, false);
 
   // motion info
   //window.addEventListener('deviceorientation', handleOrientation, true);
 
   game.paused = dialogs.isDialogShowing();
+}
+
+function handleTouch(e) {
+  touchX = e.x;
+  touchY = e.y;
+  touchOngoing = e.type !== "touchend"
+  /*if (!game.paused) {
+    game.physics.arcade.moveToPointer(ship, 40);
+    ship.rotation = game.physics.arcade.angleToPointer(ship, e.x, e.y);
+    fireBullet();
+  }*/
 }
 
 /*function handleOrientation(e) {
@@ -279,7 +291,12 @@ function update() {
       fireBullet();
       lastShotTime = Date.now();
     }
+  }
 
+  if(touchOngoing) {
+    game.physics.arcade.moveToPointer(ship, 50);
+    ship.rotation = game.physics.arcade.angleToPointer(ship, touchX, touchY);
+    fireBullet();
   }
 
   // update the game time - we consider the minimum end time of asteroids in the gamefield as current time
@@ -381,7 +398,7 @@ function fireBullet() {
       bullet.lifespan = 2000;
       bullet.rotation = ship.rotation;
       game.physics.arcade.velocityFromRotation(ship.rotation, 400, bullet.body.velocity);
-      bulletTime = game.time.now + 50;
+      bulletTime = game.time.now + 200;
     }
   }
 
