@@ -12,7 +12,7 @@
 # limitations under the License.
 
 # [START app_yaml]
-runtime: nodejs8
+runtime: nodejs10
 instance_class: F2
 automatic_scaling:
   max_concurrent_requests: 5

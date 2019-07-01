@@ -96,7 +96,10 @@ app.get('/gamestate.json', async(request, response) => {
     lhr = await getLighthouseFromBigquery(fallbackURL);
   }
 
-  const appliedThrottling = lhr.configSettings.throttlingMethod === "provided";
+  const appliedThrottling = false;
+  if(lhr.configSettings && lhr.configSettings.throttlingMethod === "provided") {
+    appliedThrottling = true;
+  }
 
   // get the audit results from lighthouse
   var lhr_fcp = lhr.audits.metrics.details.items[0].firstContentfulPaint;
@@ -357,7 +360,7 @@ async function getLighthouseFromBigquery(url) {
     console.log("Getting lighthouse from PSI API for url: " + url);
     // construct rest api url
     var api_url = PSI_REST_API;
-    api_url += '&url=' + url;
+    api_url += '&url=' + encodeURIComponent(url);
     if (API_KEY) {
       api_url += '&key=' + API_KEY;
     }
