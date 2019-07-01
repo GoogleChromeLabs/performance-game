@@ -34,7 +34,7 @@
     "@google-cloud/bigquery": "latest"
   },
   "engines": {
-    "node": "8.x"
+    "node": "10.x.x"
   },
   "license": "Apache-2.0",
   "keywords": [
